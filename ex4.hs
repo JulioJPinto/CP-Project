@@ -30,7 +30,8 @@ dados = [((S0, S1), 0), ((S0, S1), 2), ((S0, S1), 0), ((S0, S1), 3), ((S0, S1), 
 mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
 mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
 
-hashT = mkDB dados 
+hashT _ = mkDB dados 
 
 delay :: Segment -> Dist Delay
-delay = fromJust . uncurry(List.lookup) . (split id conshashT)  
+delay = Cp.cond (isJust . getSeg) (fromJust . getSeg) (!)
+    where getSeg = uncurry(List.lookup) . (split id (hashT))
