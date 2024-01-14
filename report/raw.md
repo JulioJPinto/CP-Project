@@ -13,12 +13,14 @@ ex1 (h:t) = h ++ ex1(transpose (map (reverse) t))
 `transpose (map (reverse))` é responsável por rodar a matriz 90º no sentido positivo.
 Percebeu-se, eventualmente que é possivel obter o mesmo efeito sem recurso a um map (que envolve iterar toda a matriz):
 `transpose.(map reverse) ==  reverse.transpose`
-De grosso modo, esta equivalencia existe porque transpor uma matriz em que se afeta colunas, é o mesmo que a traspor e fazer as mesmas operações elementares às linhas
+De grosso modo, esta equivalencia existe porque transpor uma matriz em que se afeta colunas, é o mesmo que a traspor e fazer as mesmas operações elementares às linhas.
 
 
 
 # Problema 3
+
 ```hs
 ex3_2 x 0 = (x,x) -- soma,atual
-ex3_2 x i = (acc+prox*prev,prox*prev)
-            where (acc,prox,prev) = (acc,(x**2) / ((2*i+1)*(2 * i)),prev)  where (acc,prev) = ex3_2 x (i-1) ```
+ex3_2 x i = (acc+ratio*prev,ratio*prev)
+            where (acc,ratio,prev) = (acc,(x**2) / ((2*i+1)*(2 * i)),prev)  where (acc,prev) = ex3_2 x (i-1)```
+
