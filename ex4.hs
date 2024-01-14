@@ -33,5 +33,14 @@ mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 
 hashT _ = mkDB dados 
 
 delay :: Segment -> Dist Delay
-delay = Cp.cond (isJust . getSeg) (fromJust . getSeg) (!)
-    where getSeg = uncurry(List.lookup) . (split id (hashT))
+delay = fromJust . uncurry(List.lookup) . (split id (hashT))
+
+compoundDelay s1 s2 = mapD (uncurry(+)) $ (prod (delay s1) (delay s2))
+
+path s1 s2 = [s1 .. s2]
+
+
+lDelay [x,y] = delay (x,y) 
+lDelay (h1:h2:t) = (mapD (uncurry(+))) $ (prod (delay (h1,h2)) (lDelay(h2:t)))
+
+pdelay s1 s2 = lDelay [s1 .. s2]
