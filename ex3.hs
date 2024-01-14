@@ -1,9 +1,6 @@
 import Cp
 import Nat
 
-
-
-
 -- h i = (2*i+1)*(2 * i)
 -- ex3_1 x 0 = (x,x,1,x**2)
 -- ex3_1 x i = (l+ (a/b),a,b,x_squared ) where (l,a,b,x_squared) =  (l,(x_squared * x_) , (h i)* y_ ,x_squared)  where (l,x_,y_,x_squared) = ex3_1 x (i-1) 
@@ -13,7 +10,7 @@ import Nat
 -- init x = (x,x)
 -- ex3_2 x = (either init x (split id id) ).outNat-- soma,atual
 
-res x = p1 . for loop init' where
+ex3 x = p1 . for loop init' where
     loop (acc,(prev,k)) = (acc+next,(next,succ(k))) where next = prev*(x**2) / ((2*k+2)*(2*k+3))
     init' = (x,(x,0))
 
