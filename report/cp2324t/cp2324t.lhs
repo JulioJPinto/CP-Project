@@ -184,7 +184,7 @@ main = undefined
 \end{code}
 %endif
 
-\section{Exercício 1}
+\Problema
 
 Este problema, retirado de um \emph{site} de exercícios de preparação para entrevistas de emprego, 
 tem uma formulação simples:
@@ -211,10 +211,12 @@ Para instruções sobre como produzir esses diagramas e exprimir raciocínios
 de cálculo, ver o anexo \ref{sec:diagramas}.
 
 \pagebreak
-\subsection{Resolução}
+\section{Resolução}
 De maneira a resolver este problema decidimos fazer alguma pesquisa. Chegamos à conclusão que este problema era bastante conhecido como \textbf{matrot}.
 
 A nossa resolução baseia-se na utilização das funções \textit{transpose} e \textit{reverse}.
+A ideia desta resolução baseia se em recursivamente, tirar a primeira linha, inverter a ordem de cada uma das linhas e fazer \textit{transpose} à matriz, até que obtemos uma matriz com só um elemento.
+
 
 
 
@@ -234,6 +236,7 @@ Inverter os elementos de uma dada lista que satisfazem um dado predicado.
 Valorizam-se as soluções tal como no problema anterior e fazem-se as mesmas
 recomendações.
 
+\section{Resolução}
 
 \Problema
 
