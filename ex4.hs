@@ -4,22 +4,13 @@ import List
 import Data.List
 import Data.Maybe
 
-
 data Stop = S0 | S1 | S2 | S3 | S4 | S5 deriving (Show, Eq, Ord, Enum)
 -- data Stop Int = S Int deriving (Show, Eq, Ord, Enum)
 type Segment = (Stop, Stop)
 
--- dados :: [(Segment, Delay)]
--- db :: [(Segment, Dist Delay)]
--- mkdist :: Eq a ⇒ [a] → Dist a
--- pdelay :: Stop → Stop → Dist Delay
-
 type Delay = Int
 type Dados = [(Segment, Delay)]
 type Db = [(Segment, Dist Delay)]
-
--- mkDist :: Eq a => [a] -> Dist a
--- mkDist = uniform --faz a distribuição uniforme dos dados
 
 dados :: [(Segment, Delay)]
 dados = [((S0, S1), 0), ((S0, S1), 2), ((S0, S1), 0), ((S0, S1), 3), ((S0, S1), 3),
@@ -55,3 +46,9 @@ f = cataList (either (const unit)  aux)
 
 pdelay :: Stop -> Stop -> Dist Delay
 pdelay = curry $ f.(uncurry path)
+
+lDelay' [x,y] = delay (x,y) 
+lDelay' (h1:h2:t) = (mapD (uncurry(+))) $ (prod (delay (h1,h2)) (lDelay'(h2:t)))
+
+pdelay' :: Stop -> Stop -> Dist Delay
+pdelay' s1 s2 = if (s1 > s2) then (pdelay s2 s1) else (lDelay [s1 .. s2])
