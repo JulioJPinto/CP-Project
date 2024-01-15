@@ -184,7 +184,7 @@ main = undefined
 \end{code}
 %endif
 
-\Problema
+\section{Exercício 1}
 
 Este problema, retirado de um \emph{site} de exercícios de preparação para entrevistas de emprego, 
 tem uma formulação simples:
@@ -210,6 +210,15 @@ descrição de como funciona e foi concebido, apoiado em diagramas explicativos.
 Para instruções sobre como produzir esses diagramas e exprimir raciocínios
 de cálculo, ver o anexo \ref{sec:diagramas}.
 
+\pagebreak
+\subsection{Resolução}
+De maneira a resolver este problema decidimos fazer alguma pesquisa. Chegamos à conclusão que este problema era bastante conhecido como \textbf{matrot}.
+
+A nossa resolução baseia-se na utilização das funções \textit{transpose} e \textit{reverse}.
+
+
+
+
 \Problema
 
 Este problema, que de novo foi retirado de um \emph{site} de exercícios de preparação para entrevistas de emprego, tem uma formulação muito simples:
@@ -224,6 +233,7 @@ Inverter os elementos de uma dada lista que satisfazem um dado predicado.
 \noindent
 Valorizam-se as soluções tal como no problema anterior e fazem-se as mesmas
 recomendações.
+
 
 \Problema
 
