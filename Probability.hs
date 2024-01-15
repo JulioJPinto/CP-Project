@@ -178,7 +178,7 @@ sortP = sortBy (\x y->compare (snd y) (snd x))
 
 -- normalization = grouping
 -- 
-normBy ::  Ord a => (a -> a -> Bool) ->  Dist a -> Dist a
+normBy ::  Ord a => (a -> a -> Bool) -> Dist a -> Dist a
 normBy f = onD $ accumBy f . sort
 
 accumBy :: Num b => (a -> a -> Bool) -> [(a,b)] -> [(a,b)]
