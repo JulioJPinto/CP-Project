@@ -47,8 +47,8 @@ f = cataList (either (const unit)  aux)
 pdelay :: Stop -> Stop -> Dist Delay
 pdelay = curry $ f.(uncurry path)
 
-lDelay' [x,y] = delay (x,y) 
-lDelay' (h1:h2:t) = (mapD (uncurry(+))) $ (prod (delay (h1,h2)) (lDelay'(h2:t)))
+-- lDelay' [x,y] = delay (x,y) 
+-- lDelay' (h1:h2:t) = (mapD (uncurry(+))) $ (prod (delay (h1,h2)) (lDelay'(h2:t)))
 
-pdelay' :: Stop -> Stop -> Dist Delay
-pdelay' s1 s2 = if (s1 > s2) then (pdelay s2 s1) else (lDelay [s1 .. s2])
+-- pdelay' :: Stop -> Stop -> Dist Delay
+-- pdelay' s1 s2 = if (s1 > s2) then (pdelay s2 s1) else (lDelay [s1 .. s2])
