@@ -236,19 +236,116 @@ Inverter os elementos de uma dada lista que satisfazem um dado predicado.
 Valorizam-se as soluções tal como no problema anterior e fazem-se as mesmas
 recomendações.
 
-\section{Resolução}
 
 \Problema
 
-\begin{center}
-\fbox{A fornecer na segunda edição deste enunciado}
-\end{center}
+Sistemas como \href{https://chat.openai.com/}{chatGPT} etc baseiam-se em
+algoritmos de aprendizagem automática que usam determinadas funções matemáticas,
+designadas \emph{activation functions} (AF), para modelar aspectos não li\-neares
+do mundo real. Uma dessas AFs é a
+\href{https://www.ml-science.com/tanh-activation-function}{tangente hiperbólica},
+definida como o quociente do seno e coseno
+\href{https://en.wikipedia.org/wiki/Hyperbolic_functions}{hiperbólicos}, 
+\begin{eqnarray}
+	\tanh x = \frac{\sinh x}{\cosh x}
+	\label{eq:tanh}
+\end{eqnarray}
+podendo estes ser definidos pelas seguintes \taylor{séries de Taylor}:
+\begin{eqnarray}
+\start
+	\sum_{k=0}^\infty \frac{x^{2k+1}}{(2k+1)!}=\sinh x
+	\label{eq:sinh}
+\more
+	\sum_{k=0}^\infty \frac{x^{2k}}{(2k)!}=\cosh x
+	\nonumber
+\end{eqnarray}
+
+Interessa que estas funções sejam implementadas de forma muito eficiente,
+desdobrando-as em ope\-rações aritméticas elementares. Isso pode ser conseguido
+através da chamada \pd{programação dinâmica} que, em \cp{Cálculo de Programas},
+é feita de forma \emph{correct-by-construction} derivando-se ciclos-\textbf{for} via
+lei de recursividade mútua generalizada a tantas funções quanto necessário
+--- ver o anexo \ref{sec:mr}. 
+
+O objectivo desta questão é codificar como um ciclo-\textsf{for} (em Haskell) a função
+\begin{eqnarray}
+	snh\ x\ i = \sum_{k=0}^i \frac{x^{2k+1}}{(2k+1)!}
+\end{eqnarray}
+que implementa |sinh x|, uma das funções de |tanh x| (\ref{eq:tanh}), através
+da soma das |i| primeiras parcelas da sua série (\ref{eq:sinh}).
+
+Deverá ser seguida a regra prática do anexo \ref{sec:mr} e documentada a
+solução proposta com todos os cálculos que se fizerem.
 
 \Problema
 
-\begin{center}
-\fbox{A fornecer na segunda edição deste enunciado}
-\end{center}
+Uma empresa de transportes urbanos pretende fornecer um serviço de previsão
+de atrasos dos seus autocarros que esteja sempre actual, com base em \emph{feedback}
+dos seus paassageiros. Para isso, desenvolveu uma \emph{app} que instala
+num telemóvel um botão que indica coordenadas GPS a um serviço central, de
+forma anónima, sugerindo que os passageiros o usem preferencialmente sempre
+que o autocarro onde vão chega a uma paragem.
+
+Com base nesses dados, outra funcionalidade da \emph{app} informa os utentes
+do serviço sobre a probabilidade do atraso que possa haver entre duas paragens
+(partida e chegada) de uma qualquer linha.
+
+Pretende-se implementar esta segunda funcionalidade assumindo disponíveis
+os dados da primeira. No que se segue, ir-se-á trabalhar sobre um modelo
+intencionalmente \emph{muito simplificado} deste sistema, em que se usará
+o mónade das distribuições probabilísticas (ver o anexo \ref{sec:probabilities}).
+Ter-se-á, então:
+\begin{itemize}
+\item paragens de autocarro
+\begin{code}
+data Stop = S0 | S1 | S2 | S3 | S4 | S5 deriving (Show,Eq,Ord,Enum)
+\end{code}
+que formam a linha |[S0 .. S5]| assumindo a ordem determinada pela instância
+de |Stop| na classe |Enum|;
+\item	segmentos da linha, isto é, percursos entre duas paragens consecutivas:
+\begin{code}
+type Segment = (Stop, Stop)
+\end{code}
+\item os dados obtidos a partir da \emph{app} dos passageiros que, após algum
+processamento, ficam disponíveis sob a forma de pares
+	\emph{(segmento, atraso observado)}:
+\begin{code}
+dados :: [(Segment, Delay)]
+\end{code}
+(Ver no apêndice \ref{sec:codigo}, página \pageref{pg:dados}, uma pequena amostra
+destes dados.)
+\end{itemize}
+A partir destes dados, há que:
+\begin{itemize}
+\item	gerar a base de dados probabilística
+\begin{code}
+db :: [(Segment, Dist Delay)]
+\end{code}
+que regista, estatisticamente, a probabilidade dos atrasos (|Delay|) que
+podem afectar cada segmento da linha. Recomenda-se aqui a definição de uma
+função genérica
+\begin{code}
+mkdist :: Eq a => [a] -> Dist a
+\end{code}
+que faça o sumário estatístico de uma qualquer lista finita, gerando a
+distribuição de ocorrência dos seus elementos.
+\item
+com base em |db|, definir a função probabilística
+\begin{code}
+delay :: Segment -> Dist Delay
+\end{code}
+que dará, para cada segmento, a respectiva distribuição de atrasos.
+\end{itemize}
+Finalmente, o objectivo principal é definir a função probabilística:
+\begin{code}
+pdelay :: Stop -> Stop -> Dist Delay
+\end{code}
+|pdelay a b| deverá informar qualquer utente que queira ir da paragem |a| até à
+paragem |b| de uma dada linha sobre a probabilidade de atraso acumulado no
+total do percurso |[a..b]|.
+
+Valorizar-se-ão as soluções que usem funcionalidades monádicas genéricas
+estudadas na disciplina e que sejam elegantes, isto é, poupem código desnecessário.
 
 \newpage
 \part*{Anexos}
