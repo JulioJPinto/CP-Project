@@ -20,9 +20,26 @@ dados = [((S0, S1), 0), ((S0, S1), 2), ((S0, S1), 0), ((S0, S1), 3), ((S0, S1), 
          ((S4, S5), 0), ((S4, S5), 5), ((S4, S5), 0), ((S4, S5), 7), ((S4, S5), -1)]
 
 
+-- mkdist :: Eq a => [a] -> Dist a
+-- mkdist = scale 
+-- mSet ::  [a] -> [(a,Int)]
+mSet :: Eq a => [a] -> ([(a, Int)],Int)
+mSet [] = ([],0)
+mSet (h:t) = (((h,c):(x)),y+c) 
+    where (x,y) = mSet rest
+          (c,rest) = (1+ length (filter (h ==) t) , (filter (h /=)) t)
 
-mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
-mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
+    -- where (c,rest) = (split (succ.length.(filter (h ==))) (filter (h /=))) t 
+
+-- func :: Eq a => [a] -> ([(a, Int)], ([a], [Int]))
+relativeFrequence :: (Eq b) => [b] -> [(b, Float)]
+relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset where (mset,s) = mSet l
+
+mkDist :: Eq a => [a] -> Dist a
+mkDist = (mkD.relativeFrequence)
+
+mkDB :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
+mkDB = map (split (p1 . head) ((mkDist .(map p2)))) . groupBy (\x y -> p1 x == p1 y)
 
 hashT :: [(Segment, Dist Delay)]
 hashT  = mkDB dados 
@@ -46,9 +63,3 @@ f = cataList (either (const unit)  aux)
 
 pdelay :: Stop -> Stop -> Dist Delay
 pdelay = curry $ f.(uncurry path)
-
--- lDelay' [x,y] = delay (x,y) 
--- lDelay' (h1:h2:t) = (mapD (uncurry(+))) $ (prod (delay (h1,h2)) (lDelay'(h2:t)))
-
--- pdelay' :: Stop -> Stop -> Dist Delay
--- pdelay' s1 s2 = if (s1 > s2) then (pdelay s2 s1) else (lDelay [s1 .. s2])
