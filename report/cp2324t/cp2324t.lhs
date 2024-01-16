@@ -236,7 +236,16 @@ Tendo então o diagrama chegamos à seguinte solução
 ex1 = (either nil conc) . recList (ex1 . reverse . transpose ) . outList
 \end{code}
 
-Aplicando algumas regras que conhecemos chegamos então à conclusão que poderiamos definir este problema como um hilomorfismo.
+Olhando para esta definição e analizando melhor o diagrama, conseguimos deduzir que podemos definir este problema como um hilomorfismo.
+Vamos então desenvolver o diagrama para provar isto.
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+|A*| \ar@/_1.5pc/@{->}[dd]_{hilo} \ar@{->}[d]^{ana} & |1+ A* >< A**|  \ar@{->}[ll] \ar@{->}[d]^{f ana} \\
+|A**| \ar@{->}[d]^{cata} \ar@/_/@{->}[rr] & |1+ A* >< A**|  \ar@{->}[d]^{fcata} \ar@/_/@{->}[ll] \\
+|A*| & |1+ A* >< A**|  \ar@{->}[ll]^{gen}
+}
+\end{eqnarray*}
 
 %code hilomorfismo
 
