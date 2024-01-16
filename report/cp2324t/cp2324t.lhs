@@ -217,8 +217,28 @@ De maneira a resolver este problema decidimos fazer alguma pesquisa. Chegamos à
 A nossa resolução baseia-se na utilização das funções \textit{transpose} e \textit{reverse}.
 A ideia desta resolução baseia se em recursivamente, tirar a primeira linha, inverter a ordem de cada uma das linhas e fazer \textit{transpose} à matriz, até que obtemos uma matriz com só um elemento.
 
+De maneira a testar esta resolução definimos então a função no formato \textit{pointwise}. Alcançamos a seguinte resposta:
+\begin{code}
+ex1pw :: [[a]] -> [a]
+ex1pw [] = []
+ex1pw (h:t) = h ++ ex1(reverse (transpose t))
+\end{code}
 
+Testando este código, conseguimos entender que realmente utilizar a função \textit{transpose} e \textit{reverse} permitem nos obter a resolução certa.
 
+Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. Para isso começamos por definir o diagrama para resolver a mesma.
+
+%Diagrama goes heres e explicação
+
+Tendo então o diagrama chegamos à seguinte solução
+
+\begin{code}
+ex1 = (either nil conc) . recList (ex1 . reverse . transpose ) . outList
+\end{code}
+
+Aplicando algumas regras que conhecemos chegamos então à conclusão que poderiamos definir este problema como um hilomorfismo.
+
+%code hilomorfismo
 
 
 \Problema

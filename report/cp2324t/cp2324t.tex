@@ -347,8 +347,36 @@ De maneira a resolver este problema decidimos fazer alguma pesquisa. Chegamos à
 A nossa resolução baseia-se na utilização das funções \textit{transpose} e \textit{reverse}.
 A ideia desta resolução baseia se em recursivamente, tirar a primeira linha, inverter a ordem de cada uma das linhas e fazer \textit{transpose} à matriz, até que obtemos uma matriz com só um elemento.
 
+De maneira a testar esta resolução definimos então a função no formato \textit{pointwise}. Alcançamos a seguinte resposta:
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ex1pw}\mathbin{::}[\mskip1.5mu [\mskip1.5mu \Varid{a}\mskip1.5mu]\mskip1.5mu]\to [\mskip1.5mu \Varid{a}\mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{ex1pw}\;[\mskip1.5mu \mskip1.5mu]\mathrel{=}[\mskip1.5mu \mskip1.5mu]{}\<[E]%
+\\
+\>[B]{}\Varid{ex1pw}\;(\Varid{h}\mathbin{:}\Varid{t})\mathrel{=}\Varid{h}\mathbin{+\!\!+}\Varid{ex1}\;(\Varid{reverse}\;(\Varid{transpose}\;\Varid{t})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
 
+Testando este código, conseguimos entender que realmente utilizar a função \textit{transpose} e \textit{reverse} permitem nos obter a resolução certa.
 
+Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. Para isso começamos por definir o diagrama para resolver a mesma.
+
+%Diagrama goes heres e explicação
+
+Tendo então o diagrama chegamos à seguinte solução
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{ex1}\mathrel{=}\alt{\Varid{nil}}{\mathsf{conc}}\comp \Varid{recList}\;(\Varid{ex1}\comp \Varid{reverse}\comp \Varid{transpose})\comp \Varid{outList}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+Aplicando algumas regras que conhecemos chegamos então à conclusão que poderiamos definir este problema como um hilomorfismo.
+
+%code hilomorfismo
 
 
 \Problema
@@ -497,6 +525,7 @@ total do percurso \ensuremath{[\mskip1.5mu \Varid{a}\mathinner{\ldotp\ldotp}\Var
 
 Valorizar-se-ão as soluções que usem funcionalidades monádicas genéricas
 estudadas na disciplina e que sejam elegantes, isto é, poupem código desnecessário.
+
 \newpage
 \part*{Anexos}
 

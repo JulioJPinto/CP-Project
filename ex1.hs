@@ -9,4 +9,4 @@ ex1pw [] = []
 ex1pw (h:t) = h ++ ex1(reverse (transpose t))
 
 -- pointfree 
-ex1 = (either nil conc) . recList (ex1f . reverse . transpose ) . outList
+ex1 = (either nil conc) . recList (ex1 . reverse . transpose ) . outList
