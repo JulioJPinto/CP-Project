@@ -25,10 +25,10 @@ mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
 mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
 
 hashT :: [(Segment, Dist Delay)]
-hashT  = mkDB dados 
+hashT  = mkDB dados
 
 delay :: Segment -> Dist Delay
-delay = fromJust . uncurry(List.lookup) . (split id (const hashT))
+delay = fromJust . uncurry List.lookup . split id (const hashT)
 
 path :: Stop -> Stop -> [Segment]
 path s1 s2 = [(s,succ s) | s <- [s1 .. pred s2]]
@@ -37,7 +37,7 @@ unit :: Dist Delay
 unit = mkD [(0,1)]
 
 lDelay :: [Segment] -> Dist Delay
-lDelay (h:t) = (joinWith (+) (lDelay(t)) . delay ) h
+lDelay (h:t) = (joinWith (+) (lDelay (t)) . delay ) h
 lDelay _ = unit
 
 f :: [Segment] -> Dist Delay

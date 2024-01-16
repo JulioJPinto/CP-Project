@@ -179,6 +179,7 @@ import Control.Applicative hiding ((<|>))
 import System.Process
 import Data.Char
 import Control.Concurrent
+import qualified Control.Applicative as sublista
 
 main = undefined
 \end{code}
@@ -375,6 +376,46 @@ total do percurso |[a..b]|.
 
 Valorizar-se-ão as soluções que usem funcionalidades monádicas genéricas
 estudadas na disciplina e que sejam elegantes, isto é, poupem código desnecessário.
+
+\section{Resolução}
+
+Para solucionar este problema dividimo-lo em 3 partes:
+\subsection{mkDB}
+
+Para formar a base de dados no formato pretendido [(Segment, Dist Delay)] temos que transformar os dados fornecidos 
+(tomando como exemplo o código fornecido no anexo E). Reparamos que esta etapa pode ser resolvida dando uso a um hilomorfismo que começa por usar a
+função groupBy para agrupar os elementos com o segmento equivalente numa lista, e de seguida a cada sublista gerada formar só um par com o segmento e
+com a distribuição gerada de todos os Delay's contidos na sublista.
+
+\begin{code}
+mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
+mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
+\end{code}
+
+Este hilomorfismo pode ser demonstrado no seguinte diagrama.
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+(A><B)* \ar@{->}[rr] \ar@{->}[d]^{ana} &  & 1+(A><B)><(A><B)* \ar@{->}[d]^{Fana} \\
+(A><B)** \ar@{->}[d]^{cata} \ar@/_/@{->}[rr] &  & 1+(A><B)><(A><B)* \ar@/_/@{->}[ll] \ar@{->}[d]^{Fcata} \\
+(A><C)* &  & 1+(A><B)><(A><C)* \ar@{->}[ll]
+}
+\end{eqnarray*}
+
+% Fazer o diagrama
+
+\subsection{delay}
+
+Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
+eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
+no código seguinte.
+
+\begin{code}
+delay :: Segment -> Dist Delay
+delay = fromJust . uncurry List.lookup . split id (const hashT)
+\end{code}
+
+\subsection{pdelay}
 
 \newpage
 \part*{Anexos}
