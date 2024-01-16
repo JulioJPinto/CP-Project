@@ -242,9 +242,26 @@ Vamos então desenvolver o diagrama para provar isto.
 
 \begin{eqnarray*}
 \xymatrix@@C=2cm{
-|A*| \ar@/_1.5pc/@{->}[dd]_{hilo} \ar@{->}[d]^{ana} & |1+ A* >< A**|  \ar@{->}[ll] \ar@{->}[d]^{f ana} \\
-|A**| \ar@{->}[d]^{cata} \ar@/_/@{->}[rr] & |1+ A* >< A**|  \ar@{->}[d]^{fcata} \ar@/_/@{->}[ll] \\
-|A*| & |1+ A* >< A**|  \ar@{->}[ll]^{gen}
+    {|A|^*}^*
+           \ar[d]_-{|anaList (g)|}
+           \ar@@/_3.5pc/[dd]_{hylo}
+           \ar@@/^/[r]_-{|g|}
+&
+    |1| + |A|^* \times {|A|^*}^*
+           \ar[d]^{|recList (anaList (g))|}
+\\
+     {|A|^*}^*
+          \ar[d]_{|cataList (f)|}
+          \ar@@/^1pc/[r]^-{|outList|}
+&
+     |1| + |A|^* \times {|A|^*}^*
+           \ar[d]^-{|recList (cataList (f))|}
+           \ar@@/^1pc/[l]^-{|inList|}
+\\
+     |A|^*
+&
+     |1| + |A|^* \times {|A|^*}^*
+           \ar@@/^/[l]^-{|f|}
 }
 \end{eqnarray*}
 
