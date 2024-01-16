@@ -58,10 +58,10 @@ splitOn _ [x] = (x,[])
 splitOn f (h:t) = if f h then (h,t) else (left,right) where (left,right) = splitOn f t
 splitOn _ _ = undefined
 
-func f = in'' . (funct'' (func f)) . (id -|- ((cond (f.p1) (aux f) id ))) . out''
+func f = in'' . (id -|- ((cond (f.p1) (aux f) id ))) . (funct'' (func f)) . out''
 aux f = split (p1.(splitOn f).p2.p2) (split (p1.p2) (p2.(splitOn f).p2.p2))
 
-func_ f = in'' . (funct'' (func_ f)) . (id -|- ((cond (f.p1) aux id ))) . out''
+func_ f = in'' . (id -|- ((cond (f.p1) aux id ))) . (funct'' (func_ f)) . out''
     where aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
 
 
