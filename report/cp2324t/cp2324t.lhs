@@ -213,38 +213,59 @@ de cálculo, ver o anexo \ref{sec:diagramas}.
 
 \pagebreak
 \section{Resolução}
-De maneira a resolver este problema decidimos fazer alguma pesquisa. Chegamos à conclusão que este problema era bastante conhecido como \textbf{matrot}.
 
-A nossa resolução baseia-se na utilização das funções \textit{transpose} e \textit{reverse}.
-A ideia desta resolução baseia se em recursivamente, tirar a primeira linha, inverter a ordem de cada uma das linhas e fazer \textit{transpose} à matriz, até que obtemos uma matriz com só um elemento.
+A nosse resolução em tirar a primeira linha da matriz para a lista resulato 
+e rodar a matriz 90º no sentido positivo, até a matriz estar fazia
 
-De maneira a testar esta resolução definimos então a função no formato \textit{pointwise}. Alcançamos a seguinte resposta:
+A operação de rotação e resolução podem ser definidas da seguinte forma 
+
 \begin{code}
-ex1pw :: [[a]] -> [a]
-ex1pw [] = []
-ex1pw (h:t) = h ++ ex1(reverse (transpose t))
+rotate :: [[a]] -> [[a]]
+rotate = reverse.transpose
+
+matrot :: [[a]] -> [a]
+matrot [] = []
+matrot (h:t) = h ++ matrot(rotate t)
 \end{code}
 
-Testando este código, conseguimos entender que realmente utilizar a função \textit{transpose} e \textit{reverse} permitem nos obter a resolução certa.
-
-Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. Para isso começamos por definir o diagrama para resolver a mesma.
-
+Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. 
 %Diagrama goes heres e explicação
 
-Tendo então o diagrama chegamos à seguinte solução
-
 \begin{code}
-ex1 = (either nil conc) . recList (ex1 . reverse . transpose ) . outList
+matrot = (either nil conc) . recList (matrot . rotate) . outList
 \end{code}
 
-Olhando para esta definição e analizando melhor o diagrama, conseguimos deduzir que podemos definir este problema como um hilomorfismo.
-Vamos então desenvolver o diagrama para provar isto.
+Que é equivalente a
+
+\begin{code}
+matrot = (either nil conc) . recList (matrot) . recList (rotate) . outList
+\end{code}
+
+Fica bastante claro que estamos na presença de um hilomorfismo, 
+
+seja matrot = cata . ana
+
+\begin{code}
+matrot = f . recList (matrot) . g
+    where 
+     f = (either nil conc)
+     g = recList (rotate) . outList
+\end{code}
+
+ficamos então com 
+
+\begin{code}
+matrot = hyloList f g
+    where 
+     f = (either nil conc)
+     g = recList (rotate) . outList
+\end{code}
 
 \begin{eqnarray*}
 \xymatrix@@C=2cm{
     {|A|^*}^*
            \ar[d]_-{|anaList (g)|}
-           \ar@@/_3.5pc/[dd]_{hylo}
+           \ar@@/_3.5pc/[dd]_{matrot}
            \ar@@/^/[r]_-{|g|}
 &
     |1| + |A|^* \times {|A|^*}^*
@@ -260,12 +281,35 @@ Vamos então desenvolver o diagrama para provar isto.
 \\
      |A|^*
 &
-     |1| + |A|^* \times {|A|^*}^*
+     |1| + |A|^* \times {|A|^*}
            \ar@@/^/[l]^-{|f|}
 }
 \end{eqnarray*}
 
-%code hilomorfismo
+Curiosamente, a própria função rotate é composta por duas funções sobre listas, 
+a intuição diz-nos que talvez estas se tratem de anamorfismos ou catamorfismos.
+
+É efetivamente possível definir as funções que servem inverter uma lista e transpor uma matriz como um catamorfismo ou anamorfismo (ambos).
+No entanto, como chamamos a reverse após a transpose decidimos defini-las de modo a que a função rotate passasse a ser um hilomorfismo.
+
+\begin{code}
+
+reverse_gen :: Either () (a2, [a2]) -> [a2]
+reverse_gen = either nil (conc.swap.(singl >< id)) 
+
+
+
+transpose_gen :: [[a1]] -> Either () ([a1], [[a1]])
+transpose_gen ([]:_) = i1 ()
+transpose_gen [] = i1 ()
+transpose_gen l = i2 ((map head l),(map tail l))  
+
+
+
+rotate = hyloList reverse_gen transpose_gen
+
+\end{code}
+
 
 
 \Problema

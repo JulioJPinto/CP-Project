@@ -20,20 +20,17 @@ dados = [((S0, S1), 0), ((S0, S1), 2), ((S0, S1), 0), ((S0, S1), 3), ((S0, S1), 
          ((S4, S5), 0), ((S4, S5), 5), ((S4, S5), 0), ((S4, S5), 7), ((S4, S5), -1)]
 
 
--- mkdist :: Eq a => [a] -> Dist a
--- mkdist = scale 
--- mSet ::  [a] -> [(a,Int)]
-mSet :: Eq a => [a] -> ([(a, Int)],Int)
-mSet [] = ([],0)
-mSet (h:t) = (((h,c):(x)),y+c) 
-    where (x,y) = mSet rest
+msetplus :: Eq a => [a] -> ([(a, Int)],Int)
+msetplus [] = ([],0)
+msetplus (h:t) = (((h,c):(x)),y+c) 
+    where (x,y) = msetplus rest
           (c,rest) = (1+ length (filter (h ==) t) , (filter (h /=)) t)
 
     -- where (c,rest) = (split (succ.length.(filter (h ==))) (filter (h /=))) t 
 
 -- func :: Eq a => [a] -> ([(a, Int)], ([a], [Int]))
 relativeFrequence :: (Eq b) => [b] -> [(b, Float)]
-relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset where (mset,s) = mSet l
+relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset where (mset,s) = msetplus l
 
 mkDist :: Eq a => [a] -> Dist a
 mkDist = (mkD.relativeFrequence)
@@ -63,3 +60,7 @@ f = cataList (either (const unit)  aux)
 
 pdelay :: Stop -> Stop -> Dist Delay
 pdelay = curry $ f.(uncurry path)
+
+
+mkdist xs =D $ map (split id (const total)) $ nub xs where
+    total = 1 / fromIntegral (length xs)
