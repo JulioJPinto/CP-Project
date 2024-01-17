@@ -832,59 +832,79 @@ replaceWhenf f = (either g h) . alpha
 
 \subsection*{Problema 4}
 
-De maneira a solucionar este problema, pode se dividi-lo em 4 partes:
+De maneira a solucionar este problema, podemos dividi-lo em 4 partes:
 
 \subsection{mkDist}
-Para se conseguir obter estatisitcas dos dados é necessário definir uma função que gere uma distribuição. 
-A partir da função abaixo definida, é possível obter uma distribuição que dependa do número de ocorrências de um determinado valor numa lista.
+Para se conseguir obter estatisitcas dos dados, é necessário definir uma função que gere uma distribuição. 
+A partir da funções abaixo definidas, é possível obter uma distribuição que dependa do número de ocorrências de um determinado valor numa lista.
 \begin{code}
-mkdist xs =D $ map (split id (const total)) $ nub xs where
-    total = 1 / fromIntegral (length xs)
-\end{code}
-\subsection{mkDB}
+msetplus :: Eq a => [a] -> ([(a, Int)],Int)
+msetplus [] = ([],0)
+msetplus (h:t) = (((h,c):(x)),y+c) 
+    where (x,y) = msetplus rest
+          (c,rest) = (1+ length (filter (h ==) t) , (filter (h /=)) t)
 
-Para gerar a |db| pretendida, |[(Segment, Dist Delay)]|, definimos a seguinte função:
-% Para formar a base de dados no formato pretendido [(Segment, Dist Delay)] temos que transformar os dados fornecidos 
-% (tomando como exemplo o código fornecido no anexo E). Reparamos que esta etapa pode ser resolvida dando uso a um hilomorfismo que começa por usar a
-% função groupBy para agrupar os elementos com o segmento equivalente numa lista, e de seguida a cada sublista gerada formar só um par com o segmento e
-% com a distribuição gerada de todos os Delay's contidos na sublista.
+
+relativeFrequence :: (Eq b) => [b] -> [(b, Float)]
+relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset where (mset,s) = msetplus l
+
+
+
+mkdist :: Eq a => [a] -> Dist a
+mkdist = mkD . relativeFrequence
+\end{code}
+
+A função |msetplus| define a partir de uma lista um \textit{MultiSet}, um \textit{Set} que guarda um elemento e a quantidade de vezes que este aparece numa lista. 
+Desta maneira conseguimos guardar o número total de ocorrências de um dado valor.
+
+A função |relativeFrequence| calcula a frequência relativa de cada um dos elementos deste \textit{MultiSet}.
+
+Apartir dai a |mkdist|, utilizando a |mkD|, gera nos a distribuição de ocorrências dos valores.
+
+\subsection{DB}
+
+De maneira a conseguirmos gerar |DB| definimos a seguinte função:
 
 \begin{code}
-mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
-mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
+db :: [(Segment, Dist Delay)]
+db = map (split (p1 . head) ((mkdist .(map p2)))) . groupBy (\x y -> p1 x == p1 y) $  dados
 \end{code}
 
-Esta função pode ser definida como um hilomorfismo, este que pode ser demonstrado no seguinte diagrama.
+A partir da |groupBy| e da utilização da funlão anónima |\x y -> p1 x == p1 y|, vamos agrupar os dados pelo seu segmento.
+De seguida, utilizamos o |split (p1 . head) (mkdist .(map p2))| para criar os pares |(Segment, Dist Delay)|. 
+Sendo, assim vamos ter então a nossa |DB|.
 
-\begin{eqnarray*}
-\xymatrix@@C=2cm{
-|(A><B)|^* \ar@@/^/[r] \ar[d]^{groupBy} & |1| + |(A><B)><(A><B)|* \ar[d]^{F groupBy} \\
-{|(A><B)|^*}^* \ar[d]^{cata} \ar@@/_/[r] & |1| + {|(A><B)><(A><B)|}^* \ar@@/_/[l] \ar[d]^{Fcata} \\
-|(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
-}
-\end{eqnarray*}
+% Esta função pode ser definida como um hilomorfismo, este que pode ser demonstrado no seguinte diagrama.
+
+% \begin{eqnarray*}
+% \xymatrix@@C=2cm{
+% |(A><B)|^* \ar@@/^/[r] \ar[d]^{groupBy} & |1| + |(A><B)><(A><B)|* \ar[d]^{F groupBy} \\
+% {|(A><B)|^*}^* \ar[d]^{cata} \ar@@/_/[r] & |1| + {|(A><B)><(A><B)|}^* \ar@@/_/[l] \ar[d]^{Fcata} \\
+% |(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
+% }
+% \end{eqnarray*}
 
 \subsection{delay}
 
 % Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
 % eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
 % no código seguinte.
-Tendo definido então a base de dados é necessário obter os mesmos rapidamente. 
-Para isso definimos a função |delay| tal como a |const hashT|, a nossa base de dados:
+Utilizando a nossa |DB|, conseguimos definir a nossa função |delay|.
 
 \begin{code}
-hashT :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
-hashT = mkDB dados
+mkf :: Eq a => [(a, b)] -> a -> Maybe b
+mkf = flip Prelude.lookup
 
 
-import Data.Maybe
+instantaneous :: Dist Delay
+instantaneous = D [(0, 1)]
 
 delay :: Segment -> Dist Delay
-delay = fromJust . uncurry List.lookup . split id (const hashT)
+delay = (either (const instantaneous) id) . outMaybe . mkf db
 \end{code}
 
-% Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
-% A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
+Através da utilização da função |mkf| na |DB|, obtemos a distribuição do segmento que procuramos. 
+Utilizando a função |outMaybe| definida na Cp.hs e o |either| que ocorre após a mesma, conseguimos ter a distribuição do segmento.
 
 \subsection{pdelay}
 
