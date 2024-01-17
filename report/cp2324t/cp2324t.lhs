@@ -120,8 +120,8 @@
 
 \group{G05}
 \studentA{A100761}{Carlos Ribeiro}
-\studentB{A100742}{Júlio Pinto }
-\studentC{A100823}{Pedro Sousa }
+\studentB{A100742}{Júlio Pinto}
+\studentC{A100823}{Pedro Sousa}
 
 %==============================================================================%
 
@@ -748,7 +748,7 @@ matrot = hyloList f g
 \xymatrix@@C=2cm{
     {|A|^*}^*
            \ar[d]_-{|anaList (g)|}
-           \ar@@/_3.5pc/[dd]_{matrot}
+           \ar@@/_3.5pc/[dd]_{matrot = |hylo (f) (g)|}
            \ar@@/^/[r]_-{|g|}
 &
     |1| + |A|^* \times {|A|^*}^*
@@ -786,8 +786,6 @@ transpose_gen :: [[a1]] -> Either () ([a1], [[a1]])
 transpose_gen ([]:_) = i1 ()
 transpose_gen [] = i1 ()
 transpose_gen l = i2 ((map head l),(map tail l))  
-
-
 
 rotate = hyloList reverse_gen transpose_gen
 
@@ -833,7 +831,7 @@ Esta função pode ser definida como um hilomorfismo, este que pode ser demonstr
 
 \begin{eqnarray*}
 \xymatrix@@C=2cm{
-|(A><B)|^* \ar[r] \ar[d]^{ana} & |1| + |(A><B)><(A><B)|* \ar[d]^{Fana} \\
+|(A><B)|^* \ar@@/^/[r] \ar[d]^{groupBy} & |1| + |(A><B)><(A><B)|* \ar[d]^{F groupBy} \\
 {|(A><B)|^*}^* \ar[d]^{cata} \ar@@/_/[r] & |1| + {|(A><B)><(A><B)|}^* \ar@@/_/[l] \ar[d]^{Fcata} \\
 |(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
 }
@@ -852,12 +850,14 @@ hashT :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
 hashT = mkDB dados
 
 
+import Data.Maybe
+
 delay :: Segment -> Dist Delay
 delay = fromJust . uncurry List.lookup . split id (const hashT)
 \end{code}
 
-Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
-A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
+% Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
+% A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
 
 \subsection{pdelay}
 
