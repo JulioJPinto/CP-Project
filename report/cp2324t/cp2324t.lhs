@@ -908,25 +908,68 @@ Utilizando a função |outMaybe| definida na Cp.hs e o |either| que ocorre após
 
 \subsection{pdelay}
 
+De maneira a definir a |pdelay|, temos que criar um array com as duas paragens que lhe passamos, tal como todas as paragens entre elas.
+Para isso definimos as seguintes funções
+
 \begin{code}
-path :: Stop -> Stop -> [Segment]
-path s1 s2 = [(s,succ s) | s <- [s1 .. pred s2]]
+ana_devide :: (Stop ,Stop) -> [Segment]
+ana_devide = anaList devide
 
-unit :: Dist Delay
-unit = mkD [(0,1)]
+devide :: (Eq b, Enum b,Ord b) => (b, b) -> Either () ((b, b), (b, b))
+devide (s,final) | s >= final = i1 ()
+                 | otherwise  = i2 ((s,succ s),(succ s,final))
+\end{code}
 
-lDelay :: [Segment] -> Dist Delay
-lDelay (h:t) = (joinWith (+) (lDelay (t)) . delay ) h
-lDelay _ = unit
+A função |devide| será o \textit{gen} do anamorfismo |ana_devide|.
 
-f :: [Segment] -> Dist Delay
-f = cataList (either (const unit)  aux)
-    where aux = uncurry (joinWith (+)).(delay >< id )
+
+Para definir a distribuição definimos então a |conquer|:
+\begin{code}
+cata_conquer :: [Segment] -> Dist Delay
+cata_conquer = cataList conquer 
+
+
+conquer :: Either a (Segment, Dist Delay) -> Dist Delay
+conquer = (either (const instantaneous)  aux)
+    where aux = uncurry (joinWith (+) . delay )
+\end{code}
+
+Nesta função, para o caso de paragem, utilizamos a |instantaneous|, enquanto que esta soma os valores de |Delay| e 
+
+Juntando ambas a divide e a conquer obtemos o seguinte diagrama.
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+    {|Stop><Stop|}
+           \ar[d]_-{|anaList (devide)|}
+           \ar@@/_6pc/[dd]_{pdelay = |hylo (conquer) (devide)|}
+           \ar@@/^/[r]_-{|devide|}
+&
+     |1| + {|Segment >< (Stop><Stop)|}
+           \ar[d]^{|F (anaList (devide))|}
+\\
+     {|Segment|}^*
+          \ar[d]_{|cataList (conquer)|}
+          \ar@@/^1pc/[r]^-{|outList|}
+&
+     |1| + |Segment| |><| {|Segment|}*
+           \ar[d]^-{|F (cataList (conquer))|}
+           \ar@@/^1pc/[l]^-{|inList|}
+\\
+     |Dist Delay|
+&
+     |1| + (|Segment >< Dist Delay|)
+           \ar@@/^/[l]^-{|conquer|}
+}
+\end{eqnarray*}
+\begin{code}
 
 pdelay :: Stop -> Stop -> Dist Delay
-pdelay = curry $ f.(uncurry path)
+pdelay = curry $ hyloList conquer devide
 
 \end{code}
+
+Finalmente, com a função |conquer| e |divide| obtemos então o hilomorfismo da |pdelay|.
 
 
 %----------------- Índice remissivo (exige makeindex) -------------------------%
