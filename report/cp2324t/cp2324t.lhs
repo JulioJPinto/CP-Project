@@ -794,9 +794,9 @@ rotate = hyloList reverse_gen transpose_gen
 \subsection*{Problema 2}
 
 Numa primiera tentativa decicidmos duplicar a lista, mantendo a cópia original e uma cópia filtrada pelo predicado e invertida,
-para, de seguida, substituir os elementos da lista original, que cumpre o predicado, pelos elementos da lista invertida.
+para, de seguida, substituir os elementos da lista original, que cumprem o predicado, pelos elementos da lista invertida.
 
-Podemos definir a função para o exercício e a função auxiliar que vai fazer esta junção das listas, este |replaceWhen|, da seguinte maneira:
+Podemos definir a função para o exercício e a função auxiliar que faz esta fusão das listas, este |replaceWhen|, da seguinte maneira:
 
 \begin{code}
 replaceWhen :: (a -> Bool) -> ([a] ,[a]) -> [a]
@@ -807,7 +807,9 @@ replaceWhen f ((h1:t1) ,l2@(h2:t2)) =
         h1:(replaceWhen f (t1,l2))
 replaceWhen _ (l1,_) = l1
 
+\end{code}
 
+\begin{code}
 
 reverseByPredicate :: (a -> Bool) -> [a] -> [a]
 reverseByPredicate _ [] = []
@@ -815,19 +817,55 @@ reverseByPredicate f l = replaceWhen f l ((reverse . (filter f)) l)
 \end{code}
 
 % ACARLOS
-Deste modo temos então as funções em \textit{pointwise}. De maneira a torná-la \textit{pointfree} aplicamos algumas regras, introduzidas nas aulas.
-Obtemos a seguinte definição:
+Deste modo temos então as funções em \textit{pointwise}. Aplicando equivalências de cálculo de programas chegamos à seguinte definição \textit{pointfree}:
 
 \begin{code}
-replaceWhenf :: (a -> Bool) -> ([a],[a]) -> [a]
-replaceWhenf f = (either g h) . alpha
+replaceWhen :: (a -> Bool) -> ([a],[a]) -> [a]
+replaceWhen f = (either g h) . alpha
     where alpha = coassocr.(distr-|-distr).distl.(coswap><coswap).(outList><outList)
           g = cons.(cond (f.p1.p1) true' false')  
-          true' =  (split (p1.p2) ((replaceWhenf f).(split (p2.p1) (p2.p2))))
-          false' = (split (p1.p1) ((replaceWhenf f).(split (p2.p1) (cons.(split (p1.p2) (p2.p2))))))
+          true' =  (split (p1.p2) ((replaceWhen f).(split (p2.p1) (p2.p2))))
+          false' = (split (p1.p1) ((replaceWhen f).(split (p2.p1) (cons.(split (p1.p2) (p2.p2))))))
           h = inList . either (i2.p1) (either (i1.p1) (i1.p1))
 \end{code}
 
+Percebemos que esta definição trás imensa complexidade, e então definimos um functor dos pares de listas para ajudar a resolver o problema.
+
+ListPar(A)  -> A'* + (Ax ListPar(A))
+
+\begin{code}
+type ListPair a  = ([a] , [a])
+
+outListPair :: ListPair a -> Either [a] (a, ListPair a) 
+outListPair ([],l) = Left l
+outListPair ((h:t),l) = Right (h,(t,l))
+
+inListPair :: Either [a] (a, ListPair a) -> ListPair a
+inListPair = either (split (const []) id) ((cons >< id). assocl)
+
+recListPair  f = id -|- id >< f
+\end{code}
+
+No out deste functor desdobramos a lista da esquerda num par cabeça cauda e mantemos a lista da direita,
+ caso a lista da esquerda for vazia ficamos apenas com a lista da direita. O in faz o converso deste out.
+
+Com este functor podemos então definir a replaceWhen usando um anamorfismo sobre este tipo.
+
+\begin{code}
+
+replaceWhen_ana_aux :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
+replaceWhen_ana_aux f = anaListPair ((id -|- (aux_)) . outListPair)
+    where aux_ (a, (as, (b:bs))) = if  f a then (b,(as,bs)) else (a, (as, b:bs))
+          aux_ _ = error "lista B mais pequena que lista A"
+
+replaceWhen_ana :: (a -> Bool) -> ([a], [a]) -> [a]
+replaceWhen_ana f  = (p1 . replaceWhen_ana_aux f)
+
+\end{code}
+
+O functor simplifica bastante o processo uma vez que o seu out encpasula os dois casos relevantes: o caso em que lista da esuqerda tem ou não elementos.
+
+No entanto como se faz |reverse| e |filter| efetivamente itera-se a lista 3 vezes para 
 \subsection*{Problema 3}
 
 \subsection*{Problema 4}
