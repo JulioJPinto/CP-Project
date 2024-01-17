@@ -208,7 +208,8 @@ instance (Ord a,Show a) => Show (Dist a) where
 -- product of independent distributions
 -- 
 joinWith :: (a -> b -> c) -> Dist a -> Dist b -> Dist c
-joinWith f (D d) (D d') = D [ (f x y,p*q) | (x,p) <- d, (y,q) <- d']
+joinWith f (D d) (D d') = D [ (f x y,p*q) | (x,p) <- d    , (y,q) <- d'       ]
+
 
 prod :: Dist a -> Dist b -> Dist (a,b)
 prod = joinWith (,)
@@ -216,6 +217,7 @@ prod = joinWith (,)
 
 -- distribution generators
 -- 
+
 type Spread a = [a] -> Dist a
 
 certainly :: Trans a

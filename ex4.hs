@@ -12,6 +12,8 @@ type Delay = Int
 type Dados = [(Segment, Delay)]
 type Db = [(Segment, Dist Delay)]
 
+-- funções fornecidas
+
 dados :: [(Segment, Delay)]
 dados = [((S0, S1), 0), ((S0, S1), 2), ((S0, S1), 0), ((S0, S1), 3), ((S0, S1), 3),
          ((S1, S2), 0), ((S1, S2), 2), ((S1, S2), 1), ((S1, S2), 1), ((S1, S2), 4),
@@ -19,6 +21,13 @@ dados = [((S0, S1), 0), ((S0, S1), 2), ((S0, S1), 0), ((S0, S1), 3), ((S0, S1), 
          ((S3, S4), 2), ((S3, S4), 3), ((S3, S4), 5), ((S3, S4), 2), ((S3, S4), 0),
          ((S4, S5), 0), ((S4, S5), 5), ((S4, S5), 0), ((S4, S5), 7), ((S4, S5), -1)]
 
+mkf :: Eq a => [(a, b)] -> a -> Maybe b
+mkf = flip Prelude.lookup
+
+instantaneous :: Dist Delay
+instantaneous = D [(0, 1)]
+
+-- mkdist
 
 msetplus :: Eq a => [a] -> ([(a, Int)],Int)
 msetplus [] = ([],0)
@@ -26,41 +35,33 @@ msetplus (h:t) = (((h,c):(x)),y+c)
     where (x,y) = msetplus rest
           (c,rest) = (1+ length (filter (h ==) t) , (filter (h /=)) t)
 
-    -- where (c,rest) = (split (succ.length.(filter (h ==))) (filter (h /=))) t 
-
--- func :: Eq a => [a] -> ([(a, Int)], ([a], [Int]))
 relativeFrequence :: (Eq b) => [b] -> [(b, Float)]
 relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset where (mset,s) = msetplus l
 
-mkDist :: Eq a => [a] -> Dist a
-mkDist = (mkD.relativeFrequence)
+mkdist :: Eq a => [a] -> Dist a
+mkdist = mkD . relativeFrequence
 
-mkDB :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
-mkDB = map (split (p1 . head) ((mkDist .(map p2)))) . groupBy (\x y -> p1 x == p1 y)
+-- 
 
-hashT :: [(Segment, Dist Delay)]
-hashT  = mkDB dados
+db :: [(Segment, Dist Delay)]
+db = map (split (p1 . head) ((mkdist .(map p2)))) . groupBy (\x y -> p1 x == p1 y) $  dados
 
 delay :: Segment -> Dist Delay
-delay = fromJust . uncurry List.lookup . split id (const hashT)
+delay = (either (const instantaneous) id ).outMaybe.mkf db
 
-path :: Stop -> Stop -> [Segment]
-path s1 s2 = [(s,succ s) | s <- [s1 .. pred s2]]
+ana_devide ::  (Stop ,Stop) -> [Segment]
+ana_devide = anaList devide
 
-unit :: Dist Delay
-unit = mkD [(0,1)]
+cata_conquer :: [Segment] -> Dist Delay
+cata_conquer = cataList conquer 
 
-lDelay :: [Segment] -> Dist Delay
-lDelay (h:t) = (joinWith (+) (lDelay (t)) . delay ) h
-lDelay _ = unit
+devide :: (Eq b, Enum b,Ord b) => (b, b) -> Either () ((b, b), (b, b))
+devide (s,final) | s >= final = i1 ()
+                 | otherwise  = i2 ((s,succ s),(succ s,final))
 
-f :: [Segment] -> Dist Delay
-f = cataList (either (const unit)  aux)
-    where aux = uncurry (joinWith (+)).(delay >< id )
+conquer :: Either a (Segment, Dist Delay) -> Dist Delay
+conquer = (either (const instantaneous)  aux)
+    where aux = uncurry (joinWith (+) . delay )
 
 pdelay :: Stop -> Stop -> Dist Delay
-pdelay = curry $ f.(uncurry path)
-
-
-mkdist xs =D $ map (split id (const total)) $ nub xs where
-    total = 1 / fromIntegral (length xs)
+pdelay = curry $ hyloList conquer devide

@@ -39,9 +39,10 @@ rW f = (either g h) . alpha
 
 
 out' = distl.(outList >< id)
-out'' :: ([a], [a]) -> Either [a] (a, ([a], [a])) -- A* x A'* -> A'* + (Ax(A*xA'*))
 
+out'' :: ([a], [a]) -> Either [a] (a, ([a], [a])) -- A* x A'* -> A'* + (Ax(A*xA'*))
 in'' :: Either [a] (a, ([a], [a])) -> ([a], [a])
+
 in' = (inList >< id).undistl
 
 
@@ -49,6 +50,7 @@ in' = (inList >< id).undistl
 
 out_ ([],l) = Left l
 out_ ((h:t),l) = Right (h,(t,l))
+
 
 funct''  f = id -|- id >< f
 
@@ -61,11 +63,11 @@ splitOn _ _ = undefined
 func f = in'' . (id -|- ((cond (f.p1) (aux f) id ))) . (funct'' (func f)) . out''
 aux f = split (p1.(splitOn f).p2.p2) (split (p1.p2) (p2.(splitOn f).p2.p2))
 
-func_ f = in'' . (id -|- ((cond (f.p1) aux id ))) . (funct'' (func_ f)) . out''
+func_ f = in'' . (id -|- (cond (f.p1) aux  id ) ) . (funct'' (func_ f)) . out''
     where aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
 
 
-res_com_um_loop g = p1.(func g).dup 
+res_com_um_loop g = p1.(func_ g).dup 
 
 
 -- rw :: (a -> Bool) -> ([a], [a']) -> ([a],[a'])
@@ -82,9 +84,9 @@ out'' = (p2 -|- assocr).distl.(outList >< id)
 
 ana'' f = in'' . funct'' (ana'' f) . f
 
-rw' f = ana'' ((id -|- (aux)) . out'')
-    where aux (a, (as, (b:bs))) = if  f a then (b,(as,bs)) else (a, (as, b:bs))
-          aux _ = error "lista B mais pequena que lista A"
+rw' f = ana'' ((id -|- (aux_)) . out'')
+    where aux_ (a, (as, (b:bs))) = if  f a then (b,(as,bs)) else (a, (as, b:bs))
+          aux_ _ = error "lista B mais pequena que lista A"
                              
 ex2 f = (rw' f) . (split id (reverse . (filter f)))
 
