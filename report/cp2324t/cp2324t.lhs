@@ -118,10 +118,10 @@
 
 %====== DEFINIR GRUPO E ELEMENTOS =============================================%
 
-\group{G99}
-\studentA{xxxxxx}{Nome }
-\studentB{xxxxxx}{Nome }
-\studentC{xxxxxx}{Nome }
+\group{G05}
+\studentA{A100761}{Carlos Ribeiro}
+\studentB{A100742}{Júlio Pinto }
+\studentC{A100823}{Pedro Sousa }
 
 %==============================================================================%
 
@@ -179,7 +179,6 @@ import Control.Applicative hiding ((<|>))
 import System.Process
 import Data.Char
 import Control.Concurrent
-import qualified Control.Applicative as sublista
 
 main = undefined
 \end{code}
@@ -211,121 +210,6 @@ descrição de como funciona e foi concebido, apoiado em diagramas explicativos.
 Para instruções sobre como produzir esses diagramas e exprimir raciocínios
 de cálculo, ver o anexo \ref{sec:diagramas}.
 
-\pagebreak
-\section{Resolução}
-
-A nosse resolução em tirar a primeira linha da matriz para a lista resulato 
-e rodar a matriz 90º no sentido positivo, até a matriz estar fazia
-
-A operação de rotação e resolução podem ser definidas da seguinte forma 
-
-\begin{code}
-rotate :: [[a]] -> [[a]]
-rotate = reverse.transpose
-
-matrot :: [[a]] -> [a]
-matrot [] = []
-matrot (h:t) = h ++ matrot(rotate t)
-\end{code}
-
-Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. 
-\begin{eqnarray*}
-\xymatrix@@C=2cm{
-    {|A|^*}^*
-           \ar[d]_-{|matrot|}
-           \ar@@/^/[r]_-{|outList|}
-&
-    |1| + |A|^* \times {|A|^*}^*
-           \ar[d]^{|F (matrot . rotate)|}
-\\
-     |A|^*
-&
-     |1| + |A|^* \times {|A|^*}
-           \ar@@/^/[l]^-{|[nil,conc]|}
-}
-\end{eqnarray*}
-
-\begin{code}
-matrot = (either nil conc) . recList (matrot . rotate) . outList
-\end{code}
-
-Que é equivalente a
-
-\begin{code}
-matrot = (either nil conc) . recList (matrot) . recList (rotate) . outList
-\end{code}
-
-Fica bastante claro que estamos na presença de um hilomorfismo, 
-
-seja matrot = cata . ana
-
-\begin{code}
-matrot = f . recList (matrot) . g
-    where 
-     f = (either nil conc)
-     g = recList (rotate) . outList
-\end{code}
-
-ficamos então com 
-
-\begin{code}
-matrot = hyloList f g
-    where 
-     f = (either nil conc)
-     g = recList (rotate) . outList
-\end{code}
-
-\begin{eqnarray*}
-\xymatrix@@C=2cm{
-    {|A|^*}^*
-           \ar[d]_-{|anaList (g)|}
-           \ar@@/_3.5pc/[dd]_{matrot}
-           \ar@@/^/[r]_-{|g|}
-&
-    |1| + |A|^* \times {|A|^*}^*
-           \ar[d]^{|recList (anaList (g))|}
-\\
-     {|A|^*}^*
-          \ar[d]_{|cataList (f)|}
-          \ar@@/^1pc/[r]^-{|outList|}
-&
-     |1| + |A|^* \times {|A|^*}^*
-           \ar[d]^-{|recList (cataList (f))|}
-           \ar@@/^1pc/[l]^-{|inList|}
-\\
-     |A|^*
-&
-     |1| + |A|^* \times {|A|^*}
-           \ar@@/^/[l]^-{|f|}
-}
-\end{eqnarray*}
-
-Curiosamente, a própria função rotate é composta por duas funções sobre listas, 
-a intuição diz-nos que talvez estas se tratem de anamorfismos ou catamorfismos.
-
-É efetivamente possível definir as funções que servem inverter uma lista e transpor uma matriz como um catamorfismo ou anamorfismo (ambos).
-No entanto, como chamamos a reverse após a transpose decidimos defini-las de modo a que a função rotate passasse a ser um hilomorfismo.
-
-\begin{code}
-
-reverse_gen :: Either () (a2, [a2]) -> [a2]
-reverse_gen = either nil (conc.swap.(singl >< id)) 
-
-
-
-transpose_gen :: [[a1]] -> Either () ([a1], [[a1]])
-transpose_gen ([]:_) = i1 ()
-transpose_gen [] = i1 ()
-transpose_gen l = i2 ((map head l),(map tail l))  
-
-
-
-rotate = hyloList reverse_gen transpose_gen
-
-\end{code}
-
-
-
 \Problema
 
 Este problema, que de novo foi retirado de um \emph{site} de exercícios de preparação para entrevistas de emprego, tem uma formulação muito simples:
@@ -340,8 +224,6 @@ Inverter os elementos de uma dada lista que satisfazem um dado predicado.
 \noindent
 Valorizam-se as soluções tal como no problema anterior e fazem-se as mesmas
 recomendações.
-
-\section{Resolução}
 
 \Problema
 
@@ -382,26 +264,6 @@ da soma das |i| primeiras parcelas da sua série (\ref{eq:sinh}).
 
 Deverá ser seguida a regra prática do anexo \ref{sec:mr} e documentada a
 solução proposta com todos os cálculos que se fizerem.
-
-\section{Resolução}
-\begin{code}
-q :: Int -> ((Integer,Integer),Integer)
-q 0 = ((20,6),0)
-q n = next_q (q (n-1))
-
-next_q :: ((Integer,Integer),Integer) -> ((Integer,Integer),Integer)
-next_q  ((m1 ,m2 ),m3) = (((3*m1)-(3*m2)+m3 , m1 ), m2) 
-
-ex3 :: (Floating p) =>  p -> Int -> p
-ex3 x = wrapper . worker 
-    where wrapper = p1 
-          worker = for loop (start x) 
-
-loop (acc,(prev,prev_q,x_squared)) = (acc + next,(next,(next_q' ),x_squared))
-    where next = prev * x_squared / fromInteger (p2 next_q')
-          next_q' = next_q prev_q
-start x = (x,(x,q 0,x**2))
-\end{code}
 
 \Problema
 
@@ -473,82 +335,6 @@ total do percurso |[a..b]|.
 Valorizar-se-ão as soluções que usem funcionalidades monádicas genéricas
 estudadas na disciplina e que sejam elegantes, isto é, poupem código desnecessário.
 
-\section{Resolução}
-
-De maneira a solucionar este problema, pode se dividi-lo em 4 partes:
-
-\subsection{mkDist}
-Para se conseguir obter estatisitcas dos dados é necessário definir uma função que gere uma distribuição. 
-A partir da função abaixo definida, é possível obter uma distribuição que dependa do número de ocorrências de um determinado valor numa lista.
-\begin{code}
-mkdist xs =D $ map (split id (const total)) $ nub xs where
-    total = 1 / fromIntegral (length xs)
-\end{code}
-\subsection{mkDB}
-
-Para gerar a |db| pretendida, |[(Segment, Dist Delay)]|, definimos a seguinte função:
-% Para formar a base de dados no formato pretendido [(Segment, Dist Delay)] temos que transformar os dados fornecidos 
-% (tomando como exemplo o código fornecido no anexo E). Reparamos que esta etapa pode ser resolvida dando uso a um hilomorfismo que começa por usar a
-% função groupBy para agrupar os elementos com o segmento equivalente numa lista, e de seguida a cada sublista gerada formar só um par com o segmento e
-% com a distribuição gerada de todos os Delay's contidos na sublista.
-
-\begin{code}
-mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
-mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
-\end{code}
-
-Esta função pode ser definida como um hilomorfismo, este que pode ser demonstrado no seguinte diagrama.
-
-\begin{eqnarray*}
-\xymatrix@@C=2cm{
-|(A><B)|^* \ar[r] \ar[d]^{ana} & |1| + |(A><B)><(A><B)|* \ar[d]^{Fana} \\
-{|(A><B)|^*}^* \ar[d]^{cata} \ar@@/_/[r] & |1| + {|(A><B)><(A><B)|}^* \ar@@/_/[l] \ar[d]^{Fcata} \\
-|(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
-}
-\end{eqnarray*}
-
-\subsection{delay}
-
-% Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
-% eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
-% no código seguinte.
-Tendo definido então a base de dados é necessário obter os mesmos rapidamente. 
-Para isso definimos a função |delay| tal como a |const hashT|, a nossa base de dados:
-
-\begin{code}
-hashT :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
-hashT = mkDB dados
-
-
-delay :: Segment -> Dist Delay
-delay = fromJust . uncurry List.lookup . split id (const hashT)
-\end{code}
-
-Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
-A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
-
-\subsection{pdelay}
-
-\begin{code}
-path :: Stop -> Stop -> [Segment]
-path s1 s2 = [(s,succ s) | s <- [s1 .. pred s2]]
-
-unit :: Dist Delay
-unit = mkD [(0,1)]
-
-lDelay :: [Segment] -> Dist Delay
-lDelay (h:t) = (joinWith (+) (lDelay (t)) . delay ) h
-lDelay _ = unit
-
-f :: [Segment] -> Dist Delay
-f = cataList (either (const unit)  aux)
-    where aux = uncurry (joinWith (+)).(delay >< id )
-
-pdelay :: Stop -> Stop -> Dist Delay
-pdelay = curry $ f.(uncurry path)
-
-\end{code}
-
 \newpage
 \part*{Anexos}
 
@@ -593,7 +379,7 @@ a seguir se descreve.
 
 \section{Docker} \label{sec:docker}
 
-Recomenda-se o uso de um \container\ Docker que deverá ser gerado a partir do ficheiro
+Recomenda-se o uso do \container\ cuja imagem é gerada pelo \Docker\ a partir do ficheiro
 \texttt{Dockerfile} que se encontra na diretoria que resulta de descompactar
 \texttt{cp2324t.zip}. Este \container\ deverá ser usado na execução
 do \GHCi\ e dos comandos relativos ao \Latex. (Ver também a \texttt{Makefile}
@@ -710,6 +496,129 @@ Os diagramas podem ser produzidos recorrendo à \emph{package} \Xymatrix, por ex
 }
 \end{eqnarray*}
 
+\section{Regra prática para a recursividade mútua em |Nat0|}\label{sec:mr}
+
+Nesta disciplina estudou-se como fazer \pd{programação dinâmica} por cálculo,
+recorrendo à lei de recursividade mútua.\footnote{Lei (\ref{eq:fokkinga})
+em \cite{Ol18}, página \pageref{eq:fokkinga}.}
+
+Para o caso de funções sobre os números naturais (|Nat0|, com functor |fF
+X = 1 + X|) é fácil derivar-se da lei que foi estudada uma
+	\emph{regra de algibeira}
+	\label{pg:regra}
+que se pode ensinar a programadores que não tenham estudado
+\cp{Cálculo de Programas}. Apresenta-se de seguida essa regra, tomando como
+exemplo o cálculo do ciclo-\textsf{for} que implementa a função de Fibonacci,
+recordar o sistema:
+\begin{spec}
+fib 0 = 1
+fib(n+1) = f n
+
+f 0 = 1
+f (n+1) = fib n + f n
+\end{spec}
+Obter-se-á de imediato
+\begin{code}
+fib' = p1 . for loop init where
+   loop(fib,f)=(f,fib+f)
+   init = (1,1)
+\end{code}
+usando as regras seguintes:
+\begin{itemize}
+\item	O corpo do ciclo |loop| terá tantos argumentos quanto o número de funções mutuamente recursivas.
+\item	Para as variáveis escolhem-se os próprios nomes das funções, pela ordem
+que se achar conveniente.\footnote{Podem obviamente usar-se outros símbolos, mas numa primeira leitura
+dá jeito usarem-se tais nomes.}
+\item	Para os resultados vão-se buscar as expressões respectivas, retirando a variável |n|.
+\item	Em |init| coleccionam-se os resultados dos casos de base das funções, pela mesma ordem.
+\end{itemize}
+Mais um exemplo, envolvendo polinómios do segundo grau $ax^2 + b x + c$ em |Nat0|.
+Seguindo o método estudado nas aulas\footnote{Secção 3.17 de \cite{Ol18} e tópico
+\href{https://www4.di.uminho.pt/~jno/media/cp/}{Recursividade mútua} nos vídeos de apoio às aulas teóricas.},
+de $f\ x = a x^2 + b x + c$ derivam-se duas funções mutuamente recursivas:
+\begin{spec}
+f 0 = c
+f (n+1) = f n + k n
+
+k 0 = a + b
+k(n+1) = k n + 2 a
+\end{spec}
+Seguindo a regra acima, calcula-se de imediato a seguinte implementação, em Haskell:
+\begin{code}
+f' a b c = p1 . for loop init where
+  loop(f,k) = (f+k,k+2*a)
+  init = (c,a+b) 
+\end{code}
+
+\section{O mónade das distribuições probabilísticas} \label{sec:probabilities}
+%format B = "\mathit B"
+%format C = "\mathit C"
+Mónades são functores com propriedades adicionais que nos permitem obter
+efeitos especiais em progra\-mação. Por exemplo, a biblioteca \Probability\
+oferece um mónade para abordar problemas de probabilidades. Nesta biblioteca,
+o conceito de distribuição estatística é captado pelo tipo
+\begin{eqnarray}
+     |newtype Dist a = D {unD :: [(a, ProbRep)]}|
+     \label{eq:Dist}
+\end{eqnarray}
+em que |ProbRep| é um real de |0| a |1|, equivalente a uma escala de $0$ a
+$100 \%$.
+
+Cada par |(a,p)| numa distribuição |d::Dist a| indica que a probabilidade
+de |a| é |p|, devendo ser garantida a propriedade de  que todas as probabilidades
+de |d| somam $100\%$.
+Por exemplo, a seguinte distribuição de classificações por escalões de $A$ a $E$,
+\[
+\begin{array}{ll}
+A & \rule{2mm}{3pt}\ 2\%\\
+B & \rule{12mm}{3pt}\ 12\%\\
+C & \rule{29mm}{3pt}\ 29\%\\
+D & \rule{35mm}{3pt}\ 35\%\\
+E & \rule{22mm}{3pt}\ 22\%\\
+\end{array}
+\]
+será representada pela distribuição
+\begin{code}
+d1 :: Dist Char
+d1 = D [('A',0.02),('B',0.12),('C',0.29),('D',0.35),('E',0.22)]
+\end{code}
+que o \GHCi\ mostrará assim:
+\begin{Verbatim}[fontsize=\small]
+'D'  35.0%
+'C'  29.0%
+'E'  22.0%
+'B'  12.0%
+'A'   2.0%
+\end{Verbatim}
+É possível definir geradores de distribuições, por exemplo distribuições \emph{uniformes},
+\begin{code}
+d2 = uniform (words "Uma frase de cinco palavras")
+\end{code}
+isto é
+\begin{Verbatim}[fontsize=\small]
+     "Uma"  20.0%
+   "cinco"  20.0%
+      "de"  20.0%
+   "frase"  20.0%
+"palavras"  20.0%
+\end{Verbatim}
+distribuição \emph{normais}, eg.\
+\begin{code}
+d3 = normal [10..20]
+\end{code}
+etc.\footnote{Para mais detalhes ver o código fonte de \Probability, que é uma adaptação da
+biblioteca \PFP\ (``Probabilistic Functional Programming''). Para quem quiser saber mais
+recomenda-se a leitura do artigo \cite{EK06}.}
+|Dist| forma um \textbf{mónade} cuja unidade é |return a = D [(a,1)]| e cuja composição de Kleisli
+é (simplificando a notação)
+\begin{spec}
+  ((kcomp f g)) a = [(y,q*p) | (x,p) <- g a, (y,q) <- f x]
+\end{spec}
+em que |g: A -> Dist B| e |f: B -> Dist C| são funções \textbf{monádicas} que representam
+\emph{computações probabilísticas}.
+
+Este mónade é adequado à resolução de problemas de \emph{probabilidades e estatística} usando programação funcional, de forma elegante e como caso particular da programação monádica.
+
 \section{Código fornecido}\label{sec:codigo}
 
 \subsection*{Problema 1}
@@ -732,6 +641,34 @@ test5 = reverseVowels "ácidos" == "ocidás"
 test6 = reverseByPredicate even [1..20] == [1,20,3,18,5,16,7,14,9,12,11,10,13,8,15,6,17,4,19,2]
 \end{code}
 
+\subsection*{Problema 3}
+
+Nenhum código é fornecido neste problema.
+
+\subsection*{Problema 4}
+Os atrasos, medidos em minutos, são inteiros:
+\begin{code}
+type Delay = Integer
+\end{code}
+Amostra de dados apurados por passageiros: \label{pg:dados}
+\begin{code}
+dados = [((S0,S1),0),((S0,S1),2),((S0,S1),0),((S0,S1),3),((S0,S1),3),
+         ((S1,S2),0),((S1,S2),2),((S1,S2),1),((S1,S2),1),((S1,S2),4),
+         ((S2,S3),2),((S2,S3),2),((S2,S3),4),((S2,S3),0),((S2,S3),5),
+         ((S3,S4),2),((S3,S4),3),((S3,S4),5),((S3,S4),2),((S3,S4),0),
+         ((S4,S5),0),((S4,S5),5),((S4,S5),0),((S4,S5),7),((S4,S5),-1)]
+\end{code}
+\emph{``Funcionalização'' de listas}:
+\begin{code}
+mkf :: Eq a => [(a, b)] -> a -> Maybe b
+mkf = flip Prelude.lookup
+\end{code}
+Ausência de qualquer atraso:
+\begin{code}
+instantaneous :: Dist Delay
+instantaneous = D [ (0,1) ]
+\end{code}
+
 %----------------- Soluções dos alunos -----------------------------------------%
 
 \section{Soluções dos alunos}\label{sec:resolucao}
@@ -746,9 +683,114 @@ que sejam necessárias.
 
 \subsection*{Problema 1}
 
+A nosse resolução consiste em tirar a primeira linha da matriz  
+e rodar a matriz 90º no sentido positivo, até a matriz estar vazia.
+
+A operação de rotação e a resolução do problema podem ser definidas da seguinte forma 
+
 \begin{code}
-matrot:: Eq a => [[a]] -> [a]
-matrot= undefined
+rotate :: [[a]] -> [[a]]
+rotate = reverse.transpose
+
+matrot :: [[a]] -> [a]
+matrot [] = []
+matrot (h:t) = h ++ matrot(rotate t)
+\end{code}
+
+Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. 
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+    {|A|^*}^*
+           \ar[d]_-{|matrot|}
+           \ar@@/^/[r]_-{|outList|}
+&
+    |1| + |A|^* \times {|A|^*}^*
+           \ar[d]^{|F (matrot . rotate)|}
+\\
+     |A|^*
+&
+     |1| + |A|^* \times {|A|^*}
+           \ar@@/^/[l]^-{|[nil,conc]|}
+}
+\end{eqnarray*}
+
+\begin{code}
+matrot = (either nil conc) . recList (matrot . rotate) . outList
+\end{code}
+
+Que é equivalente a
+
+\begin{code}
+matrot = (either nil conc) . recList (matrot) . recList (rotate) . outList
+\end{code}
+
+Fica bastante claro que estamos na presença de um hilomorfismo, 
+
+seja matrot = cata . ana
+
+\begin{code}
+matrot = f . recList (matrot) . g
+    where 
+     f = (either nil conc)
+     g = recList (rotate) . outList
+\end{code}
+
+ficamos então com 
+
+\begin{code}
+matrot = hyloList f g
+    where 
+     f = (either nil conc)
+     g = recList (rotate) . outList
+\end{code}
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+    {|A|^*}^*
+           \ar[d]_-{|anaList (g)|}
+           \ar@@/_3.5pc/[dd]_{matrot}
+           \ar@@/^/[r]_-{|g|}
+&
+    |1| + |A|^* \times {|A|^*}^*
+           \ar[d]^{|recList (anaList (g))|}
+\\
+     {|A|^*}^*
+          \ar[d]_{|cataList (f)|}
+          \ar@@/^1pc/[r]^-{|outList|}
+&
+     |1| + |A|^* \times {|A|^*}^*
+           \ar[d]^-{|recList (cataList (f))|}
+           \ar@@/^1pc/[l]^-{|inList|}
+\\
+     |A|^*
+&
+     |1| + |A|^* \times {|A|^*}
+           \ar@@/^/[l]^-{|f|}
+}
+\end{eqnarray*}
+
+Curiosamente, a própria função rotate é composta por duas funções sobre listas, 
+a intuição diz-nos que talvez estas se tratem de anamorfismos ou catamorfismos.
+
+É efetivamente possível definir as funções que servem inverter uma lista e transpor uma matriz como um catamorfismo ou anamorfismo (ambos).
+No entanto, como chamamos a reverse após a transpose decidimos defini-las de modo a que a função rotate passasse a ser um hilomorfismo.
+
+\begin{code}
+
+reverse_gen :: Either () (a2, [a2]) -> [a2]
+reverse_gen = either nil (conc.swap.(singl >< id)) 
+
+
+
+transpose_gen :: [[a1]] -> Either () ([a1], [[a1]])
+transpose_gen ([]:_) = i1 ()
+transpose_gen [] = i1 ()
+transpose_gen l = i2 ((map head l),(map tail l))  
+
+
+
+rotate = hyloList reverse_gen transpose_gen
+
 \end{code}
 
 \subsection*{Problema 2}
@@ -760,6 +802,85 @@ reverseVowels = undefined
 reverseByPredicate :: (a -> Bool) -> [a] -> [a]
 reverseByPredicate p = undefined
 \end{code}
+
+\subsection*{Problema 3}
+
+\subsection*{Problema 4}
+
+De maneira a solucionar este problema, pode se dividi-lo em 4 partes:
+
+\subsection{mkDist}
+Para se conseguir obter estatisitcas dos dados é necessário definir uma função que gere uma distribuição. 
+A partir da função abaixo definida, é possível obter uma distribuição que dependa do número de ocorrências de um determinado valor numa lista.
+\begin{code}
+mkdist xs =D $ map (split id (const total)) $ nub xs where
+    total = 1 / fromIntegral (length xs)
+\end{code}
+\subsection{mkDB}
+
+Para gerar a |db| pretendida, |[(Segment, Dist Delay)]|, definimos a seguinte função:
+% Para formar a base de dados no formato pretendido [(Segment, Dist Delay)] temos que transformar os dados fornecidos 
+% (tomando como exemplo o código fornecido no anexo E). Reparamos que esta etapa pode ser resolvida dando uso a um hilomorfismo que começa por usar a
+% função groupBy para agrupar os elementos com o segmento equivalente numa lista, e de seguida a cada sublista gerada formar só um par com o segmento e
+% com a distribuição gerada de todos os Delay's contidos na sublista.
+
+\begin{code}
+mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
+mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
+\end{code}
+
+Esta função pode ser definida como um hilomorfismo, este que pode ser demonstrado no seguinte diagrama.
+
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+|(A><B)|^* \ar[r] \ar[d]^{ana} & |1| + |(A><B)><(A><B)|* \ar[d]^{Fana} \\
+{|(A><B)|^*}^* \ar[d]^{cata} \ar@@/_/[r] & |1| + {|(A><B)><(A><B)|}^* \ar@@/_/[l] \ar[d]^{Fcata} \\
+|(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
+}
+\end{eqnarray*}
+
+\subsection{delay}
+
+% Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
+% eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
+% no código seguinte.
+Tendo definido então a base de dados é necessário obter os mesmos rapidamente. 
+Para isso definimos a função |delay| tal como a |const hashT|, a nossa base de dados:
+
+\begin{code}
+hashT :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
+hashT = mkDB dados
+
+
+delay :: Segment -> Dist Delay
+delay = fromJust . uncurry List.lookup . split id (const hashT)
+\end{code}
+
+Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
+A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
+
+\subsection{pdelay}
+
+\begin{code}
+path :: Stop -> Stop -> [Segment]
+path s1 s2 = [(s,succ s) | s <- [s1 .. pred s2]]
+
+unit :: Dist Delay
+unit = mkD [(0,1)]
+
+lDelay :: [Segment] -> Dist Delay
+lDelay (h:t) = (joinWith (+) (lDelay (t)) . delay ) h
+lDelay _ = unit
+
+f :: [Segment] -> Dist Delay
+f = cataList (either (const unit)  aux)
+    where aux = uncurry (joinWith (+)).(delay >< id )
+
+pdelay :: Stop -> Stop -> Dist Delay
+pdelay = curry $ f.(uncurry path)
+
+\end{code}
+
 
 %----------------- Índice remissivo (exige makeindex) -------------------------%
 
