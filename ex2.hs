@@ -27,23 +27,23 @@ replaceWhen_pointFree1 f = (either g h) . alpha
           h = inList . either (i2.p1) (either (i1.p1) (i1.p1))
 
 -- Functor dos pares de listas
-outListPair :: ([a], [a]) -> Either [a] (a, ([a], [a])) -- A* x A'* -> A'* + (Ax(A*xA'*))
+
+type ListPair a b = ([a] , [b])
+
+outListPair :: ListPair a a -> Either [a] (a, ListPair a a) -- A* x A'* -> A'* + (Ax(A*xA'*))
 outListPair ([],l) = Left l
 outListPair ((h:t),l) = Right (h,(t,l))
 
-inListPair :: Either [a] (a, ([a], [a])) -> ([a], [a])
+inListPair :: Either [a] (a, ListPair a a) -> ListPair a a
 inListPair = either (split (const []) id) ((cons >< id). assocl)
 
-recListPair :: (c -> d) -> Either b1 (b2, c) -> Either b1 (b2, d)
+recListPair :: (ListPair a b -> ListPair c d) -> Either [b] (a, ListPair a b) -> Either [b] (a , ListPair c d)
 recListPair  f = id -|- id >< f
 
-anaListPair :: (c -> Either [a] (a, c)) -> c -> ([a], [a])
 anaListPair f = inListPair . recListPair (anaListPair f) . f
 
-cataListPair :: (Either [b2] (b2, d) -> d) -> ([b2], [b2]) -> d
 cataListPair g   = g . recListPair (cataListPair g) . outListPair   
 
-hyloListPair :: (Either [b2] (b2, c) -> c) -> (a -> Either [b2] (b2, a)) -> a -> c
 hyloListPair f g = cataListPair f . anaListPair g
 
 -- ReplaceWhen usando o functor dos pares de listas
