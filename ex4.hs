@@ -2,7 +2,6 @@ import Probability
 import Cp
 import List
 import Data.List
-import Data.Maybe
 
 data Stop = S0 | S1 | S2 | S3 | S4 | S5 deriving (Show, Eq, Ord, Enum)
 -- data Stop Int = S Int deriving (Show, Eq, Ord, Enum)
@@ -47,9 +46,9 @@ db :: [(Segment, Dist Delay)]
 db = map (split (p1 . head) ((mkdist .(map p2)))) . groupBy (\x y -> p1 x == p1 y) $  dados
 
 delay :: Segment -> Dist Delay
-delay = (either (const instantaneous) id ).outMaybe.mkf db
+delay = (either (const instantaneous) id).outMaybe.mkf db
 
-ana_devide ::  (Stop ,Stop) -> [Segment]
+ana_devide :: (Stop ,Stop) -> [Segment]
 ana_devide = anaList devide
 
 cata_conquer :: [Segment] -> Dist Delay

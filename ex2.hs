@@ -26,7 +26,7 @@ replaceWhen_pointFree1 f = (either g h) . alpha
           false' = (split (p1.p1) ((replaceWhen_pointFree1 f).(split (p2.p1) (cons.(split (p1.p2) (p2.p2))))))
           h = inList . either (i2.p1) (either (i1.p1) (i1.p1))
 
--- replaceWhen com functor dos pares de listas
+-- Functor dos pares de listas
 outListPair :: ([a], [a]) -> Either [a] (a, ([a], [a])) -- A* x A'* -> A'* + (Ax(A*xA'*))
 outListPair ([],l) = Left l
 outListPair ((h:t),l) = Right (h,(t,l))
@@ -40,6 +40,21 @@ recListPair  f = id -|- id >< f
 anaListPair :: (c -> Either [a] (a, c)) -> c -> ([a], [a])
 anaListPair f = inListPair . recListPair (anaListPair f) . f
 
+cataListPair :: (Either [b2] (b2, d) -> d) -> ([b2], [b2]) -> d
+cataListPair g   = g . recListPair (cataListPair g) . outListPair   
+
+hyloListPair :: (Either [b2] (b2, c) -> c) -> (a -> Either [b2] (b2, a)) -> a -> c
+hyloListPair f g = cataListPair f . anaListPair g
+
+-- ReplaceWhen usando o functor dos pares de listas
+
+replaceWhen_ana_aux :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
+replaceWhen_ana_aux f = anaListPair ((id -|- (aux_)) . outListPair)
+    where aux_ (a, (as, (b:bs))) = if  f a then (b,(as,bs)) else (a, (as, b:bs))
+          aux_ _ = error "lista B mais pequena que lista A"
+
+replaceWhen_ana :: (a -> Bool) -> ([a], [a]) -> [a]
+replaceWhen_ana f  = (p1 . replaceWhen_ana_aux f)
 
 -- Solução que usa a replaceWhen
 
@@ -50,37 +65,20 @@ reverseByPredicate_pointWise f l = replaceWhen f (l ,(reverse $ filter f l) )
 reverseByPredicate_pointFree :: (a -> Bool) -> [a] -> [a]
 reverseByPredicate_pointFree f = (replaceWhen f) . split id (reverse. (filter f))
 
+-- Solução num loop apenas
 
-
-
-
-splitOn :: ( a->Bool) -> [a] -> (a,[a])
+splitOn :: (a -> Bool) -> [a] -> (a,[a])
 splitOn _ [x] = (x,[])
 splitOn f (h:t) = if f h then (h,t) else (left,right) where (left,right) = splitOn f t
-splitOn _ _ = undefined
+splitOn _ _ = error "Lista vazia"
 
-func f = inListPair . (id -|- ((cond (f.p1) (aux f) id ))) . (recListPair (func f)) . outListPair
-aux f = split (p1.(splitOn f).p2.p2) (split (p1.p2) (p2.(splitOn f).p2.p2))
+replaceWhenReversed :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
+replaceWhenReversed f = cataListPair gene
+    where
+        gene = inListPair . (id -|- (cond (f.p1) aux  id ) )  
+        aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
 
-func_ f = inListPair . (id -|- (cond (f.p1) aux  id ) ) . (recListPair (func_ f)) . outListPair
-    where aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
-
-
-res_com_um_loop g = p1.(func_ g).dup 
-
-
--- rw :: (a -> Bool) -> ([a], [a']) -> ([a],[a'])
-rw f = inListPair.(id -|- ((cond (f.p1) aux id ))) . recListPair (rw f).  outListPair
-    where aux = (split  (p1.(splitOn f).p2.p2) (split (p1.p2) (p2.(splitOn f).p2.p2)))
-
-res f = p1. rw f . dup -- (split id (filter f))
-
-
-
-rw' f = anaListPair ((id -|- (aux_)) . outListPair)
-    where aux_ (a, (as, (b:bs))) = if  f a then (b,(as,bs)) else (a, (as, b:bs))
-          aux_ _ = error "lista B mais pequena que lista A"
-                             
-
+reverseByPredicate :: (a -> Bool) -> [a] -> [a]
+reverseByPredicate g = p1.(replaceWhenReversed g).dup 
 
 -- End Utils -----------------------
