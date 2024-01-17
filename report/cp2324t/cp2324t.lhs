@@ -865,7 +865,42 @@ replaceWhen_ana f  = (p1 . replaceWhen_ana_aux f)
 
 O functor simplifica bastante o processo uma vez que o seu out encpasula os dois casos relevantes: o caso em que lista da esuqerda tem ou não elementos.
 
-No entanto como se faz |reverse| e |filter| efetivamente itera-se a lista 3 vezes para 
+No entanto como se faz |reverse| e |filter| efetivamente itera-se a lista 3 vezes.
+Resolvemos então definir uma solução alternativa que faça tudo numa iteração sobre a lista.
+
+\begin{code}
+
+splitOn :: (a -> Bool) -> [a] -> (a,[a])
+splitOn _ [x] = (x,[])
+splitOn f (h:t) = if f h then (h,t) else (left,right) where (left,right) = splitOn f t
+splitOn _ _ = error "Lista vazia"
+
+replaceWhenReversed :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
+replaceWhenReversed f = cataListPair gene
+    where
+        gene = inListPair . (id -|- (cond (f.p1) aux  id ) )  
+        aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
+
+reverseByPredicate :: (a -> Bool) -> [a] -> [a]
+reverseByPredicate g = p1.(replaceWhenReversed g).dup 
+
+\end{code}
+
+A função splitOn retorna, num par,o primeiro elemento de uma lista que satisfaz um predicato e os restantes elementos.
+Esta função falha se se passar uma lista vazia ou uma lista sem elementos que satisfaçam o predicado, no entanto estes casos não acontecem
+devido aos argumentos que lhe passamos.
+
+Para cada elemento da primeira lista, este catamorfismo verifica se este satisfaz o predicado, se tal for verdade o gene troca 
+o elemento que será inserido na lista pelo inListPair pelo primeiro elemento que cumpre o predicado na segunda lista,
+ e remove da mesma todos os elementos desde o início da lista até esse elemento.
+
+Pela natureza da recursão a insersão dos elementos da lista da direita é invertida.
+
+Assim, essencialmente, a função splitOn cumpre a responsabilidade da filter da primeira solução, e a estrutura recursiva da função faz com que os elementos sejam 
+inseridos em ordem inversa, surtindo o efeito da reverse.
+
+
+
 \subsection*{Problema 3}
 
 Para resolver o problema 3, foi necessário utilizar diversas formúlas matemáticas.
