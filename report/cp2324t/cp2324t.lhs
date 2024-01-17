@@ -793,12 +793,39 @@ rotate = hyloList reverse_gen transpose_gen
 
 \subsection*{Problema 2}
 
+Numa primiera tentativa decicidmos duplicar a lista, mantendo a cópia original e uma cópia filtrada pelo predicado e invertida,
+para, de seguida, substituir os elementos da lista original, que cumpre o predicado, pelos elementos da lista invertida.
+
+Podemos definir a função para o exercício e a função auxiliar que vai fazer esta junção das listas, este |replaceWhen|, da seguinte maneira:
+
 \begin{code}
-reverseVowels :: String -> String
-reverseVowels = undefined
+replaceWhen :: (a -> Bool) -> ([a] ,[a]) -> [a]
+replaceWhen f ((h1:t1) ,l2@(h2:t2)) = 
+    if f h1 then
+        h2:(replaceWhen f (t1,t2)) 
+    else 
+        h1:(replaceWhen f (t1,l2))
+replaceWhen _ (l1,_) = l1
+
+
 
 reverseByPredicate :: (a -> Bool) -> [a] -> [a]
-reverseByPredicate p = undefined
+reverseByPredicate _ [] = []
+reverseByPredicate f l = replaceWhen f l ((reverse . (filter f)) l)
+\end{code}
+
+% ACARLOS
+Deste modo temos então as funções em \textit{pointwise}. De maneira a torná-la \textit{pointfree} aplicamos algumas regras, introduzidas nas aulas.
+Obtemos a seguinte definição:
+
+\begin{code}
+replaceWhenf :: (a -> Bool) -> ([a],[a]) -> [a]
+replaceWhenf f = (either g h) . alpha
+    where alpha = coassocr.(distr-|-distr).distl.(coswap><coswap).(outList><outList)
+          g = cons.(cond (f.p1.p1) true' false')  
+          true' =  (split (p1.p2) ((replaceWhenf f).(split (p2.p1) (p2.p2))))
+          false' = (split (p1.p1) ((replaceWhenf f).(split (p2.p1) (cons.(split (p1.p2) (p2.p2))))))
+          h = inList . either (i2.p1) (either (i1.p1) (i1.p1))
 \end{code}
 
 \subsection*{Problema 3}
