@@ -847,7 +847,7 @@ recListPair  f = id -|- id >< f
 \end{code}
 
 No out deste functor desdobramos a lista da esquerda num par cabeça cauda e mantemos a lista da direita,
- caso a lista da esquerda for vazia ficamos apenas com a lista da direita. O in faz o converso deste out.
+caso a lista da esquerda for vazia ficamos apenas com a lista da direita. O in faz o converso deste out.
 
 Com este functor podemos então definir a replaceWhen usando um anamorfismo sobre este tipo.
 
@@ -867,6 +867,53 @@ O functor simplifica bastante o processo uma vez que o seu out encpasula os dois
 
 No entanto como se faz |reverse| e |filter| efetivamente itera-se a lista 3 vezes para 
 \subsection*{Problema 3}
+
+Para resolver o problema 3, foi necessário utilizar diversas formúlas matemáticas.
+Para tal definimos a seguinte função |q|.
+
+\begin{code}
+q :: Int -> ((Integer,Integer),Integer)
+q 0 = ((20,6),0)
+q n = next_q (q (n-1))
+
+next_q :: ((Integer,Integer),Integer) -> ((Integer,Integer),Integer)
+next_q  ((m1 ,m2 ),m3) = (((3*m1)-(3*m2)+m3 , m1 ), m2)
+\end{code}
+
+Os cálculos abaixo permitem nos demonstrar o porquê da definição acima.
+\newline
+$ 
+\frac{
+     \frac{x^{2k-1}}{(2k+1)!}
+     }
+     {
+     \frac{x^{2(k-1)+1}}{(2(k-1)+1)!}
+     } = 
+  \frac{
+     \frac{x^{2k-1}}{x^{2(k-1)+1}}
+     }
+     {
+     \frac{(2k+1)!}{(2(k+1)+1)!}
+     } =
+  \frac{
+     \frac{x^{2k-1}}{x^{2k-1}}
+     }
+     {
+     \frac{(2k+1)!}{(2k+1)!}
+     } 
+$ 
+
+  Sabemos que:
+  $ \frac{(2k+1)(2k)(2k-1)!}{(2k+1)!} $
+
+  Voltando aos cálculos anterior temos que:
+  $ \frac{
+     x^2
+     }
+     {
+     (2k+1)(2k)
+     } $
+
 
 \subsection*{Problema 4}
 
