@@ -118,10 +118,10 @@
 
 %====== DEFINIR GRUPO E ELEMENTOS =============================================%
 
-\group{G99}
-\studentA{xxxxxx}{Nome }
-\studentB{xxxxxx}{Nome }
-\studentC{xxxxxx}{Nome }
+\group{G05}
+\studentA{A100761}{Carlos Ribeiro}
+\studentB{A100742}{Júlio Pinto }
+\studentC{A100823}{Pedro Sousa }
 
 %==============================================================================%
 
@@ -740,7 +740,7 @@ ficamos então com
 \begin{code}
 matrot = hyloList f g
     where 
-     f = (either nil conc)justify-self-stretch
+     f = (either nil conc)
      g = recList (rotate) . outList
 \end{code}
 
@@ -809,7 +809,7 @@ reverseByPredicate p = undefined
 
 De maneira a solucionar este problema, pode se dividi-lo em 4 partes:
 
-\subsubsection{mkDist}
+\subsection{mkDist}
 Para se conseguir obter estatisitcas dos dados é necessário definir uma função que gere uma distribuição. 
 A partir da função abaixo definida, é possível obter uma distribuição que dependa do número de ocorrências de um determinado valor numa lista.
 \begin{code}
@@ -839,7 +839,7 @@ Esta função pode ser definida como um hilomorfismo, este que pode ser demonstr
 }
 \end{eqnarray*}
 
-\subsubsection{delay}
+\subsection{delay}
 
 % Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
 % eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
@@ -859,7 +859,7 @@ delay = fromJust . uncurry List.lookup . split id (const hashT)
 Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
 A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
 
-\subsubsection{pdelay}
+\subsection{pdelay}
 
 \begin{code}
 path :: Stop -> Stop -> [Segment]
