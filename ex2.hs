@@ -28,16 +28,16 @@ replaceWhen_pointFree1 f = (either g h) . alpha
 
 -- Functor dos pares de listas
 
-type ListPair a b = ([a] , [b])
+type ListPair a  = ([a] , [a])
 
-outListPair :: ListPair a a -> Either [a] (a, ListPair a a) -- A* x A'* -> A'* + (Ax(A*xA'*))
+outListPair :: ListPair a -> Either [a] (a, ListPair a) -- A* x A'* -> A'* + (Ax(A*xA'*))
 outListPair ([],l) = Left l
 outListPair ((h:t),l) = Right (h,(t,l))
 
-inListPair :: Either [a] (a, ListPair a a) -> ListPair a a
+inListPair :: Either [a] (a, ListPair a) -> ListPair a
 inListPair = either (split (const []) id) ((cons >< id). assocl)
 
-recListPair :: (ListPair a b -> ListPair c d) -> Either [b] (a, ListPair a b) -> Either [b] (a , ListPair c d)
+recListPair :: (ListPair a -> ListPair c) -> Either [a] (a, ListPair a) -> Either [a] (a , ListPair c)
 recListPair  f = id -|- id >< f
 
 anaListPair f = inListPair . recListPair (anaListPair f) . f
