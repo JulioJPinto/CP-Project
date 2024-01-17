@@ -229,7 +229,21 @@ matrot (h:t) = h ++ matrot(rotate t)
 \end{code}
 
 Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. 
-%Diagrama goes heres e explicação
+\begin{eqnarray*}
+\xymatrix@@C=2cm{
+    {|A|^*}^*
+           \ar[d]_-{|matrot|}
+           \ar@@/^/[r]_-{|outList|}
+&
+    |1| + |A|^* \times {|A|^*}^*
+           \ar[d]^{|F (matrot . rotate)|}
+\\
+     |A|^*
+&
+     |1| + |A|^* \times {|A|^*}
+           \ar@@/^/[l]^-{|[nil,conc]|}
+}
+\end{eqnarray*}
 
 \begin{code}
 matrot = (either nil conc) . recList (matrot . rotate) . outList
@@ -327,6 +341,7 @@ Inverter os elementos de uma dada lista que satisfazem um dado predicado.
 Valorizam-se as soluções tal como no problema anterior e fazem-se as mesmas
 recomendações.
 
+\section{Resolução}
 
 \Problema
 
@@ -367,6 +382,26 @@ da soma das |i| primeiras parcelas da sua série (\ref{eq:sinh}).
 
 Deverá ser seguida a regra prática do anexo \ref{sec:mr} e documentada a
 solução proposta com todos os cálculos que se fizerem.
+
+\section{Resolução}
+\begin{code}
+q :: Int -> ((Integer,Integer),Integer)
+q 0 = ((20,6),0)
+q n = next_q (q (n-1))
+
+next_q :: ((Integer,Integer),Integer) -> ((Integer,Integer),Integer)
+next_q  ((m1 ,m2 ),m3) = (((3*m1)-(3*m2)+m3 , m1 ), m2) 
+
+ex3 :: (Floating p) =>  p -> Int -> p
+ex3 x = wrapper . worker 
+    where wrapper = p1 
+          worker = for loop (start x) 
+
+loop (acc,(prev,prev_q,x_squared)) = (acc + next,(next,(next_q' ),x_squared))
+    where next = prev * x_squared / fromInteger (p2 next_q')
+          next_q' = next_q prev_q
+start x = (x,(x,q 0,x**2))
+\end{code}
 
 \Problema
 
@@ -440,43 +475,79 @@ estudadas na disciplina e que sejam elegantes, isto é, poupem código desnecess
 
 \section{Resolução}
 
-Para solucionar este problema dividimo-lo em 3 partes:
+De maneira a solucionar este problema, pode se dividi-lo em 4 partes:
+
+\subsection{mkDist}
+Para se conseguir obter estatisitcas dos dados é necessário definir uma função que gere uma distribuição. 
+A partir da função abaixo definida, é possível obter uma distribuição que dependa do número de ocorrências de um determinado valor numa lista.
+\begin{code}
+mkdist xs =D $ map (split id (const total)) $ nub xs where
+    total = 1 / fromIntegral (length xs)
+\end{code}
 \subsection{mkDB}
 
-Para formar a base de dados no formato pretendido [(Segment, Dist Delay)] temos que transformar os dados fornecidos 
-(tomando como exemplo o código fornecido no anexo E). Reparamos que esta etapa pode ser resolvida dando uso a um hilomorfismo que começa por usar a
-função groupBy para agrupar os elementos com o segmento equivalente numa lista, e de seguida a cada sublista gerada formar só um par com o segmento e
-com a distribuição gerada de todos os Delay's contidos na sublista.
+Para gerar a |db| pretendida, |[(Segment, Dist Delay)]|, definimos a seguinte função:
+% Para formar a base de dados no formato pretendido [(Segment, Dist Delay)] temos que transformar os dados fornecidos 
+% (tomando como exemplo o código fornecido no anexo E). Reparamos que esta etapa pode ser resolvida dando uso a um hilomorfismo que começa por usar a
+% função groupBy para agrupar os elementos com o segmento equivalente numa lista, e de seguida a cada sublista gerada formar só um par com o segmento e
+% com a distribuição gerada de todos os Delay's contidos na sublista.
 
 \begin{code}
 mkDB :: Eq a => [(a, b)] -> [(a, Dist b)]
 mkDB = map (split (p1 . head) (uniform . map p2)) . groupBy (\x y -> p1 x == p1 y)
 \end{code}
 
-Este hilomorfismo pode ser demonstrado no seguinte diagrama.
+Esta função pode ser definida como um hilomorfismo, este que pode ser demonstrado no seguinte diagrama.
 
 \begin{eqnarray*}
 \xymatrix@@C=2cm{
-(A><B)* \ar@{->}[rr] \ar@{->}[d]^{ana} &  & 1+(A><B)><(A><B)* \ar@{->}[d]^{Fana} \\
-(A><B)** \ar@{->}[d]^{cata} \ar@/_/@{->}[rr] &  & 1+(A><B)><(A><B)* \ar@/_/@{->}[ll] \ar@{->}[d]^{Fcata} \\
-(A><C)* &  & 1+(A><B)><(A><C)* \ar@{->}[ll]
+|(A><B)|^* \ar[r] \ar[d]^{ana} & |1| + |(A><B)><(A><B)|* \ar[d]^{Fana} \\
+{|(A><B)|^*}^* \ar[d]^{cata} \ar@@/_/[r] & |1| + {|(A><B)><(A><B)|}^* \ar@@/_/[l] \ar[d]^{Fcata} \\
+|(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
 }
 \end{eqnarray*}
 
-% Fazer o diagrama
-
 \subsection{delay}
 
-Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
-eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
-no código seguinte.
+% Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
+% eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
+% no código seguinte.
+Tendo definido então a base de dados é necessário obter os mesmos rapidamente. 
+Para isso definimos a função |delay| tal como a |const hashT|, a nossa base de dados:
 
 \begin{code}
+hashT :: [(Segment, Delay)] -> [(Segment, Dist Delay)]
+hashT = mkDB dados
+
+
 delay :: Segment -> Dist Delay
 delay = fromJust . uncurry List.lookup . split id (const hashT)
 \end{code}
 
+Devido à natureza da função |lookup|, esta iria nos devolver tipos como |Just (Dist Delay)|, para isso utilizamos o |fromJust| como maneira de a retirar do monáde |Maybe|.
+A utilização do |fromJust| poderá causar alguns problemas caso a |lookup| retorne um |Nothing|, porém devido a como esta função será utilizada, não existe a necessidade de garantir essa excecção.
+
 \subsection{pdelay}
+
+\begin{code}
+path :: Stop -> Stop -> [Segment]
+path s1 s2 = [(s,succ s) | s <- [s1 .. pred s2]]
+
+unit :: Dist Delay
+unit = mkD [(0,1)]
+
+lDelay :: [Segment] -> Dist Delay
+lDelay (h:t) = (joinWith (+) (lDelay (t)) . delay ) h
+lDelay _ = unit
+
+f :: [Segment] -> Dist Delay
+f = cataList (either (const unit)  aux)
+    where aux = uncurry (joinWith (+)).(delay >< id )
+
+pdelay :: Stop -> Stop -> Dist Delay
+pdelay = curry $ f.(uncurry path)
+
+\end{code}
 
 \newpage
 \part*{Anexos}
