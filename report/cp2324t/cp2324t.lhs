@@ -689,11 +689,17 @@ matrot (h:t) = h ++ matrot(rotate t)
 \end{code}
 
 Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree}. 
+\begin{code}
+matrot = (either nil conc) . recList(matrot . rotate) . outList
+\end{code}
+
+Seja $ F = recList  , in = inList , out =  outList $ 
+
 \begin{eqnarray*}
 \xymatrix@@C=2cm{
     {|A|^*}^*
            \ar[d]_-{|matrot|}
-           \ar@@/^/[r]_-{|outList|}
+           \ar@@/^/[r]_-{|out|}
 &
     |1| + |A|^* \times {|A|^*}^*
            \ar[d]^{|F (matrot . rotate)|}
@@ -705,31 +711,49 @@ Passamos então para definir esta solução \textit{à la CP}, \textit{pointfree
 }
 \end{eqnarray*}
 
-\begin{code}
-matrot = (either nil conc) . recList (matrot . rotate) . outList
-\end{code}
-
-Que é equivalente a
-
-\begin{code}
-matrot = (either nil conc) . recList (matrot) . recList (rotate) . outList
-\end{code}
-
-Fica bastante claro que estamos na presença de um hilomorfismo, 
-
-seja matrot = f . g
-
 \begin{eqnarray*}
-matrot = f . recList (matrot) . g
-&
+\start
+|
+     matrot = (either nil conc) . F(matrot . rotate) . out
+|
+\just\equiv{}
+|
+     matrot = (either nil conc) . F(matrot) . F(rotate) . out
+|
+\just\equiv{ matrot = hylo f g }
+|
+     hylo f g = (either nil conc) . F(hylo f g) . F(rotate) . out
+|
+\just\equiv{ def-hylo }
+|
+     (cata f ). (ana g) = (either nil conc) . F((cata f ).( ana g)) . F(rotate) . out
+|
+\just\equiv{ Functor-F , Natural-id}
+|
+     (cata f ). (ana g) = (either nil conc) . F(cata f ) . id . F( ana g) . F(rotate) . out
+|
+\just\equiv{in . out = out . in = id}
+|
+     (cata f ). (ana g) = (either nil conc) . F(cata f ) . out . in . F( ana g) . F(rotate) . out
+|
+\just\equiv{ Leibnitz}
+|
+    lcbr(
+          (cata f ) = (either nil conc) . F(cata f ) . out 
+     )(
+          (ana g) =  in . F( ana g) . F(rotate) . out
+     )
+|
+\just\equiv{ Shunt-left, Shunt-right, Cancelamento-cata, Cancelamento-ana}
+|
+    lcbr(
+          f  = (either nil conc)  
+     )(
+          g =  F(rotate) . out
+     )
+|
+\qed
 \end{eqnarray*}
-
-\begin{code}
-matrot = f . recList (matrot) . g
-    where 
-     f = (either nil conc)
-     g = recList (rotate) . outList
-\end{code}
 
 ficamos então com 
 
@@ -740,7 +764,7 @@ matrot = hyloList f g
      g = recList (rotate) . outList
 \end{code}
 
-\begin{eqnarray*}
+\begin{eqnarray}
 \xymatrix@@C=2cm{
     {|A|^*}^*
            \ar[d]_-{|anaList (g)|}
@@ -748,14 +772,14 @@ matrot = hyloList f g
            \ar@@/^/[r]_-{|g|}
 &
     |1| + |A|^* \times {|A|^*}^*
-           \ar[d]^{|recList (anaList (g))|}
+           \ar[d]^{|F(anaList (g))|}
 \\
      {|A|^*}^*
           \ar[d]_{|cataList (f)|}
           \ar@@/^1pc/[r]^-{|outList|}
 &
      |1| + |A|^* \times {|A|^*}^*
-           \ar[d]^-{|recList (cataList (f))|}
+           \ar[d]^-{|F(cataList (f))|}
            \ar@@/^1pc/[l]^-{|inList|}
 \\
      |A|^*
@@ -763,7 +787,7 @@ matrot = hyloList f g
      |1| + |A|^* \times {|A|^*}
            \ar@@/^/[l]^-{|f|}
 }
-\end{eqnarray*}
+\end{eqnarray}
 
 Curiosamente, a própria função rotate é composta por duas funções sobre listas, 
 a intuição diz-nos que talvez estas se tratem de anamorfismos ou catamorfismos.
@@ -772,20 +796,21 @@ a intuição diz-nos que talvez estas se tratem de anamorfismos ou catamorfismos
 No entanto, como chamamos a reverse após a transpose decidimos defini-las de modo a que a função rotate passasse a ser um hilomorfismo.
 
 \begin{code}
-
-reverse_gen :: Either () (a2, [a2]) -> [a2]
+reverse_gen :: Either () a >< [a] -> [a]
 reverse_gen = either nil (conc.swap.(singl >< id)) 
+\end{code}
 
-
-
-transpose_gen :: [[a1]] -> Either () ([a1], [[a1]])
+\begin{code}
+transpose_gen :: [[a]] -> Either () ([a] >< [[a]])
 transpose_gen ([]:_) = i1 ()
 transpose_gen [] = i1 ()
-transpose_gen l = i2 ((map head l),(map tail l))  
-
-rotate = hyloList reverse_gen transpose_gen
-
+transpose_gen l = i2 ((map head l),(map tail l))
 \end{code}
+
+\begin{code}
+rotate = hyloList reverse_gen transpose_gen
+\end{code}
+
 \pagebreak
 \subsection*{Problema 2}
 
@@ -802,17 +827,14 @@ replaceWhen f ((h1:t1) ,l2@(h2:t2)) =
     else 
         h1:(replaceWhen f (t1,l2))
 replaceWhen _ (l1,_) = l1
-
 \end{code}
 
 \begin{code}
-
 reverseByPredicate :: (a -> Bool) -> [a] -> [a]
 reverseByPredicate _ [] = []
 reverseByPredicate f l = replaceWhen f l ((reverse . (filter f)) l)
 \end{code}
 
-% ACARLOS
 Deste modo temos então as funções em \textit{pointwise}. Aplicando equivalências de cálculo de programas chegamos à seguinte definição \textit{pointfree}:
 
 \begin{code}
@@ -825,25 +847,50 @@ replaceWhen f = (either g h) . alpha
           h = inList . either (i2.p1) (either (i1.p1) (i1.p1))
 \end{code}
 
-Percebemos que esta definição trás imensa complexidade, e então definimos um functor dos pares de listas para ajudar a resolver o problema.
+\begin{eqnarray}
+\xymatrix@@C=2cm{
+     |A|^* \times |B|^* 
+     \ar[d]^\alpha \\
+     (A \times |A|^*) \times (B \times |B|^*) + ((A \times |A|^*) \times 1 + (1 \times (B \times |B|^*) + 1 \times 1) )
+     \ar[d]^-{|[g,h]|} \\
+     |A|^*
+     }
+\end{eqnarray}
 
-ListPar(A)  -> A'* + (Ax ListPar(A))
+Percebemos que esta definição trás imensa complexidade, e então definimos um functor dos pares de listas para ajudar a resolver o problema.
+\pagebreak
+
+\subsection{ListPair}
+
+\begin{eqnarray}
+\xymatrix@@C=2cm{
+     ListPar(A) \ar[r]^{out} & 
+     |A|^* + A \times ListPar(A)
+     }
+\end{eqnarray}
 
 \begin{code}
 type ListPair a  = ([a] , [a])
+\end{code}
 
+\begin{code}
 outListPair :: ListPair a -> Either [a] (a, ListPair a) 
 outListPair ([],l) = Left l
 outListPair ((h:t),l) = Right (h,(t,l))
+\end{code}
+
+\begin{code}
 
 inListPair :: Either [a] (a, ListPair a) -> ListPair a
 inListPair = either (split (const []) id) ((cons >< id). assocl)
+\end{code}
 
+\begin{code}
 recListPair  f = id -|- id >< f
 \end{code}
 
-No out deste functor desdobramos a lista da esquerda num par cabeça cauda e mantemos a lista da direita,
-caso a lista da esquerda for vazia ficamos apenas com a lista da direita. O in faz o converso deste out.
+No |out| deste functor desdobramos a lista da esquerda num par cabeça cauda e mantemos a lista da direita,
+caso a lista da esquerda for vazia ficamos apenas com a lista da direita. O |in| faz o converso deste |out|.
 
 Com este functor podemos então definir a replaceWhen usando um anamorfismo sobre este tipo.
 
@@ -853,10 +900,11 @@ replaceWhen_ana_aux :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
 replaceWhen_ana_aux f = anaListPair ((id -|- (aux_)) . outListPair)
     where aux_ (a, (as, (b:bs))) = if  f a then (b,(as,bs)) else (a, (as, b:bs))
           aux_ _ = error "lista B mais pequena que lista A"
+\end{code}
 
-replaceWhen_ana :: (a -> Bool) -> ([a], [a]) -> [a]
-replaceWhen_ana f  = (p1 . replaceWhen_ana_aux f)
-
+\begin{code}
+replaceWhen :: (a -> Bool) -> ([a], [a]) -> [a]
+replaceWhen f  = (p1 . replaceWhen_ana_aux f)
 \end{code}
 
 O functor simplifica bastante o processo uma vez que o seu out encpasula os dois casos relevantes: o caso em que lista da esuqerda tem ou não elementos.
@@ -865,21 +913,23 @@ No entanto como se faz |reverse| e |filter| efetivamente itera-se a lista 3 veze
 Resolvemos então definir uma solução alternativa que faça tudo numa iteração sobre a lista.
 
 \begin{code}
-
 splitOn :: (a -> Bool) -> [a] -> (a,[a])
 splitOn _ [x] = (x,[])
 splitOn f (h:t) = if f h then (h,t) else (left,right) where (left,right) = splitOn f t
 splitOn _ _ = error "Lista vazia"
+\end{code}
 
+\begin{code}
 replaceWhenReversed :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
 replaceWhenReversed f = cataListPair gene
     where
         gene = inListPair . (id -|- (cond (f.p1) aux  id ) )  
         aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
+\end{code}
 
+\begin{code}
 reverseByPredicate :: (a -> Bool) -> [a] -> [a]
 reverseByPredicate g = p1.(replaceWhenReversed g).dup 
-
 \end{code}
 
 A função splitOn retorna, num par,o primeiro elemento de uma lista que satisfaz um predicato e os restantes elementos.
@@ -894,6 +944,18 @@ Pela natureza da recursão a insersão dos elementos da lista da direita é inve
 
 Assim, essencialmente, a função splitOn cumpre a responsabilidade da filter da primeira solução, e a estrutura recursiva da função faz com que os elementos sejam 
 inseridos em ordem inversa, surtindo o efeito da reverse.
+
+A função |reverseVowels| define-se então à custa da |reverseByPredicate| e de um predicado |isVowel|
+
+\begin{code}
+isVowel :: Char -> Bool
+isVowel = flip elem "aeiouAEIOU"
+\end{code}
+
+\begin{code}
+reverseVowels = reverseByPredicate isVowel
+\end{code}
+
 
 
 \pagebreak

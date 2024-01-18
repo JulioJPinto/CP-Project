@@ -3,7 +3,7 @@ import List
 
 -- isVowel
 isVowel :: Char -> Bool
-isVowel a = elem a "aeiouAEIOU"
+isVowel = flip elem "aeiouAEIOU"
 
 -- isPar
 isPar :: Int -> Bool
@@ -73,10 +73,10 @@ splitOn f (h:t) = if f h then (h,t) else (left,right) where (left,right) = split
 splitOn _ _ = error "Lista vazia"
 
 replaceWhenReversed :: (a -> Bool) -> ([a], [a]) -> ([a], [a])
-replaceWhenReversed f = cataListPair gene
-    where
-        gene = inListPair . (id -|- (cond (f.p1) aux  id ) )  
-        aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
+replaceWhenReversed f = cataListPair (gene f)
+    
+gene f = inListPair . (id -|- (cond (f.p1) aux  id ) )  
+    where aux (_,(y,z)) = (h,(y,t)) where (h,t) = splitOn f z
 
 reverseByPredicate :: (a -> Bool) -> [a] -> [a]
 reverseByPredicate g = p1.(replaceWhenReversed g).dup 
