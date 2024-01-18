@@ -670,17 +670,8 @@ instantaneous = D [ (0,1) ]
 \end{code}
 
 %----------------- Soluções dos alunos -----------------------------------------%
-
+\pagebreak
 \section{Soluções dos alunos}\label{sec:resolucao}
-Os alunos devem colocar neste anexo as suas soluções para os exercícios
-propostos, de acordo com o ``layout'' que se fornece.
-Não podem ser alterados os nomes ou tipos das funções dadas, mas pode ser
-adicionado texto ao anexo, bem como diagramas e/ou outras funções auxiliares
-que sejam necessárias.
-
-\noindent
-\textbf{Importante}: Não pode ser alterado o texto deste ficheiro fora deste anexo.
-
 \subsection*{Problema 1}
 
 A nosse resolução consiste em tirar a primeira linha da matriz  
@@ -726,7 +717,12 @@ matrot = (either nil conc) . recList (matrot) . recList (rotate) . outList
 
 Fica bastante claro que estamos na presença de um hilomorfismo, 
 
-seja matrot = cata . ana
+seja matrot = f . g
+
+\begin{eqnarray*}
+matrot = f . recList (matrot) . g
+&
+\end{eqnarray*}
 
 \begin{code}
 matrot = f . recList (matrot) . g
@@ -790,7 +786,7 @@ transpose_gen l = i2 ((map head l),(map tail l))
 rotate = hyloList reverse_gen transpose_gen
 
 \end{code}
-
+\pagebreak
 \subsection*{Problema 2}
 
 Numa primiera tentativa decicidmos duplicar a lista, mantendo a cópia original e uma cópia filtrada pelo predicado e invertida,
@@ -900,56 +896,85 @@ Assim, essencialmente, a função splitOn cumpre a responsabilidade da filter da
 inseridos em ordem inversa, surtindo o efeito da reverse.
 
 
-
+\pagebreak
 \subsection*{Problema 3}
 
-Para resolver o problema 3, foi necessário utilizar diversas formúlas matemáticas.
-Para tal definimos a seguinte função |q|.
+Para resolver o problema 3, é necessário implementar o somatório seguinte:
 
-\begin{code}
-q :: Int -> ((Integer,Integer),Integer)
-q 0 = ((20,6),0)
-q n = next_q (q (n-1))
+\begin{eqnarray}
+\start
+	\sum_{k=0}^\infty \frac{x^{2k+1}}{(2k+1)!}
+	\label{eq:sinh}
+\end{eqnarray}
 
-next_q :: ((Integer,Integer),Integer) -> ((Integer,Integer),Integer)
-next_q  ((m1 ,m2 ),m3) = (((3*m1)-(3*m2)+m3 , m1 ), m2)
-\end{code}
+Para o fazer de forma eficiente é necessário definir a sucessão no corpo do somatório de forma recursiva.
+Seja então 
 
-Os cálculos abaixo permitem nos demonstrar o porquê da definição acima.
-\newline
+$ s(k) = \frac{x^{2k+1}}{(2k+1)!}$
+
+Temos que 
+
+$ s(0) = \frac{x^{2*0+1}}{(2*0+1)!} = \frac{x^{1}}{1!} = x $
+
+E, por
+
 $ 
 \frac{
-     \frac{x^{2k-1}}{(2k+1)!}
+     \frac{x^{2(k+1)+1}}{(2(k+1)+1)!}
      }
      {
-     \frac{x^{2(k-1)+1}}{(2(k-1)+1)!}
+     \frac{x^{2k+1}}{(2k+1)!}
      } = 
   \frac{
-     \frac{x^{2k-1}}{x^{2(k-1)+1}}
+     \frac{x^{2k+3}}{x^{2k+1}}
      }
      {
-     \frac{(2k+1)!}{(2(k+1)+1)!}
+     \frac{(2k+3)!}{(2k+1)!}
      } =
   \frac{
-     \frac{x^{2k-1}}{x^{2k-1}}
+     \frac{x^{2k+1}x^2}{x^{2k+1}}
      }
      {
-     \frac{(2k+1)!}{(2k+1)!}
+     \frac{(2k+3)(2k+2)(2k+1)!}{(2k+1)!}
      } 
+     =
+  \frac{x^2} {(2k+3)(2k+2)}
 $ 
 
-  Sabemos que:
-  $ \frac{(2k+1)(2k)(2k-1)!}{(2k+1)!} $
+Temos também que
 
-  Voltando aos cálculos anterior temos que:
-  $ \frac{
-     x^2
-     }
-     {
-     (2k+1)(2k)
-     } $
+$ s(k+1) = s(k) * \frac{x^2} {(2k+3)(2k+2)} $
+
+Como $ (2k+3)(2k+2) = (4k^2 + 10k +6) $
+
+E para todos os polinómios p de grau 2 ou inferior 
+
+$ p(n) = 3p(n-1)-3p(n-2)+p(n-3) $
+
+É possivel definir totalmente o polinómio no denominador da fracção também de forma recursiva, sabendo os três primeiros termos
+
+Utilizando também uma estratégia de memoização para não termos de calcular o $x^2$ em cada iteração
+chega-se à seguinte deifinição
+\begin{code}
+ex3 :: (Floating p) =>  p -> Int -> p
+ex3 x = wrapper . worker 
+    where wrapper = p1 
+          worker = for loop (start x) 
+\end{code}
+
+\begin{code}
+loop (acc,(prev,prev_q,x_squared)) = (acc + next,(next,(next_q' ),x_squared))
+     where 
+          next = prev * x_squared / fromInteger (p2 next_q')
+          next_q' = (((3*m1)-(3*m2)+m3 , m1 ), m2) where ((m1 ,m2 ),m3) = prev_q
+\end{code}
+
+\begin{code}
+start x = (x,(x,((20,6),0),x**2))
+\end{code}
 
 
+\pagebreak
 \subsection*{Problema 4}
 
 De maneira a solucionar este problema, podemos dividi-lo em 4 partes:
@@ -963,23 +988,25 @@ msetplus [] = ([],0)
 msetplus (h:t) = (((h,c):(x)),y+c) 
     where (x,y) = msetplus rest
           (c,rest) = (1+ length (filter (h ==) t) , (filter (h /=)) t)
+\end{code}
 
-
+\begin{code}
 relativeFrequence :: (Eq b) => [b] -> [(b, Float)]
-relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset where (mset,s) = msetplus l
+relativeFrequence l = map (id><(((/fromIntegral s).fromIntegral))) mset 
+     where (mset,s) = msetplus l
+\end{code}
 
-
-
+\begin{code}
 mkdist :: Eq a => [a] -> Dist a
 mkdist = mkD . relativeFrequence
 \end{code}
 
-A função |msetplus| define a partir de uma lista um \textit{MultiSet}, um \textit{Set} que guarda um elemento e a quantidade de vezes que este aparece numa lista. 
-Desta maneira conseguimos guardar o número total de ocorrências de um dado valor.
+A função |msetplus| define a partir de uma lista um \textit{MultiSet}, um \textit{Set} que guarda um elemento e a quantidade de vezes que este aparece numa lista, 
+(retorna também o tamanho da lista incial)
 
 A função |relativeFrequence| calcula a frequência relativa de cada um dos elementos deste \textit{MultiSet}.
 
-Apartir dai a |mkdist|, utilizando a |mkD|, gera nos a distribuição de ocorrências dos valores.
+Apartir dai a |mkdist|, utiliza a |mkD|, para geraar a distribuição de ocorrências dos valores.
 
 \subsection{DB}
 
@@ -990,9 +1017,8 @@ db :: [(Segment, Dist Delay)]
 db = map (split (p1 . head) ((mkdist .(map p2)))) . groupBy (\x y -> p1 x == p1 y) $  dados
 \end{code}
 
-A partir da |groupBy| e da utilização da funlão anónima |\x y -> p1 x == p1 y|, vamos agrupar os dados pelo seu segmento.
-De seguida, utilizamos o |split (p1 . head) (mkdist .(map p2))| para criar os pares |(Segment, Dist Delay)|. 
-Sendo, assim vamos ter então a nossa |DB|.
+A partir da |groupBy| e da utilização da funlão anónima |\x y -> p1 x == p1 y|, agrupam-se os dados pelo seu segmento.
+De seguida, utiliza-se o |split (p1 . head) (mkdist .(map p2))| para criar os pares |(Segment, Dist Delay)|. 
 
 % Esta função pode ser definida como um hilomorfismo, este que pode ser demonstrado no seguinte diagrama.
 
@@ -1003,60 +1029,55 @@ Sendo, assim vamos ter então a nossa |DB|.
 % |(A><C)|^* & |1| + |(A><B)><(A><C)|^* \ar[l]
 % }
 % \end{eqnarray*}
-
+\pagebreak
 \subsection{delay}
 
 % Após termos os dados no formato correto, pretendemos conseguir facilmente obter o delay associado a um determinado \textit{Segment} e também de forma 
 % eficiente. Esta operação é bastante elementar, para a realizar simplesmente fazemos um \textit{lookup} na nossa base de dados do segmento pretendido como apresentado
 % no código seguinte.
-Utilizando a nossa |DB|, conseguimos definir a nossa função |delay|.
+Utilizando a função |DB| e mkf define-se a função |delay|.
 
 \begin{code}
 mkf :: Eq a => [(a, b)] -> a -> Maybe b
 mkf = flip Prelude.lookup
+\end{code}
 
-
+\begin{code}
 instantaneous :: Dist Delay
 instantaneous = D [(0, 1)]
+\end{code}
 
+\begin{code}
 delay :: Segment -> Dist Delay
 delay = (either (const instantaneous) id) . outMaybe . mkf db
 \end{code}
 
-Através da utilização da função |mkf| na |DB|, obtemos a distribuição do segmento que procuramos. 
-Utilizando a função |outMaybe| definida na Cp.hs e o |either| que ocorre após a mesma, conseguimos ter a distribuição do segmento.
+Através da utilização da função |mkf| funcionliza-se a |DB|.
+No entanto, caso o segmento dado como argumento não exsita na base de dados um simples |lookup| retorna |Nothing|, para evitar poetenciais erros,
+ nesse retorna-se a distribuição "instanânea" que, no contexto deste problema, é o elemento neutro das operações que é necessário fazer
+ sobre estas distribuições 
 
 \subsection{pdelay}
 
-De maneira a definir a |pdelay|, temos que criar um array com as duas paragens que lhe passamos, tal como todas as paragens entre elas.
-Para isso definimos as seguintes funções
+Definir a |pdelay|, passa por criar uma lista com todos os segmentos num dado caminho, e efetuar uma operação de convolução discreta sobre as distribuições
+ associadas a cada segmento da lista. Implementamos esta função como um hilomorfismo sobre listas.
 
 \begin{code}
-ana_devide :: (Stop ,Stop) -> [Segment]
-ana_devide = anaList devide
-
 devide :: (Eq b, Enum b,Ord b) => (b, b) -> Either () ((b, b), (b, b))
-devide (s,final) | s >= final = i1 ()
-                 | otherwise  = i2 ((s,succ s),(succ s,final))
+devide (s,final) 
+     | s >= final = i1 ()
+     | otherwise  = i2 ((s,succ s),(succ s,final))
 \end{code}
 
-A função |devide| será o \textit{gen} do anamorfismo |ana_devide|.
-
-
-Para definir a distribuição definimos então a |conquer|:
 \begin{code}
-cata_conquer :: [Segment] -> Dist Delay
-cata_conquer = cataList conquer 
-
-
 conquer :: Either a (Segment, Dist Delay) -> Dist Delay
 conquer = (either (const instantaneous)  aux)
     where aux = uncurry (joinWith (+) . delay )
 \end{code}
 
-Nesta função, para o caso de paragem, utilizamos a |instantaneous|, enquanto que esta soma os valores de |Delay| e 
+A convolução passa essencialemente por agrupar os atrasos iguais num novo evento probabilístico.
 
-Juntando ambas a divide e a conquer obtemos o seguinte diagrama.
+Como referido acima o elemento neutro da opereção de convolução no contexto deste problema é a distribuição dada por |instantaneous|.
 
 \begin{eqnarray*}
 \xymatrix@@C=2cm{
@@ -1085,7 +1106,7 @@ Juntando ambas a divide e a conquer obtemos o seguinte diagrama.
 \begin{code}
 
 pdelay :: Stop -> Stop -> Dist Delay
-pdelay = curry $ hyloList conquer devide
+pdelay = curry (hyloList conquer devide)
 
 \end{code}
 

@@ -63,4 +63,4 @@ conquer = (either (const instantaneous)  aux)
     where aux = uncurry (joinWith (+) . delay )
 
 pdelay :: Stop -> Stop -> Dist Delay
-pdelay = curry $ hyloList conquer devide
+pdelay = curry (hyloList conquer devide)
